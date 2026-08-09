@@ -1,6 +1,7 @@
 node_modules/
 dist/
 downloads/
+data/
 *.tsbuildinfo
 .DS_Store
 *.log

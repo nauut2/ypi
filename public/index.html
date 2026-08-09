@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Stack+Sans+Notch:wght@200..700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
     rel="stylesheet"
   />
   <link
@@ -78,6 +78,34 @@
         Pega un enlace, elige el formato y recibe un enlace directo al archivo.
         Sin registros, sin anuncios, sin complicaciones.
       </p>
+    </section>
+
+    <!-- Estadísticas -->
+    <section class="stats" id="stats" aria-label="Estadísticas de descargas" hidden>
+      <div class="stats-card">
+        <p class="stats-eyebrow">
+          <i class="bi bi-graph-up-arrow" aria-hidden="true"></i>
+          <span data-i18n="statTotal">Descargas totales</span>
+        </p>
+        <p class="stats-number" id="statTotal">0</p>
+        <div class="stats-chips">
+          <span class="stats-chip">
+            <i class="bi bi-film" aria-hidden="true"></i>
+            <b id="statVideos">0</b>
+            <em data-i18n="statVideos">Videos MP4</em>
+          </span>
+          <span class="stats-chip">
+            <i class="bi bi-file-earmark-music" aria-hidden="true"></i>
+            <b id="statAudios">0</b>
+            <em data-i18n="statAudios">Audios MP3</em>
+          </span>
+          <span class="stats-chip">
+            <i class="bi bi-calendar-check" aria-hidden="true"></i>
+            <b id="statToday">0</b>
+            <em data-i18n="statToday">Hoy</em>
+          </span>
+        </div>
+      </div>
     </section>
 
     <!-- Panel de descarga -->

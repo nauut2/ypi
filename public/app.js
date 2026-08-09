@@ -30,6 +30,10 @@
       step2Text: "Video MP4 hasta 1080p con audio, o audio MP3 hasta 320 kbps.",
       step3Title: "Obtén tu enlace",
       step3Text: "El archivo se guarda en el servidor y recibes un enlace directo y corto.",
+      statTotal: "Descargas totales",
+      statVideos: "Videos MP4",
+      statAudios: "Audios MP3",
+      statToday: "Hoy",
       // dinámicos
       noUrl: "Pega primero un enlace de YouTube.",
       badUrl: "El enlace no parece ser de YouTube.",
@@ -76,6 +80,10 @@
       step2Text: "MP4 video up to 1080p with audio, or MP3 audio up to 320 kbps.",
       step3Title: "Get your link",
       step3Text: "The file is saved on the server and you get a short direct link.",
+      statTotal: "Total downloads",
+      statVideos: "MP4 videos",
+      statAudios: "MP3 audio",
+      statToday: "Today",
       // dynamic
       noUrl: "Paste a YouTube link first.",
       badUrl: "That doesn't look like a YouTube link.",
@@ -110,6 +118,7 @@
   const progressPct = $("progressPct");
   const result = $("result");
   const toasts = $("toasts");
+  const statsSection = $("stats");
 
   const VIDEO_QUALITIES = [360, 480, 720, 1080];
   const AUDIO_QUALITIES = [128, 96, 256, 320];
@@ -155,6 +164,9 @@
     }
     if (!progress.hidden) {
       updateProgressText();
+    }
+    if (!statsSection.hidden && lastStats) {
+      renderStats(lastStats);
     }
   }
 
@@ -210,6 +222,13 @@
     setTimeout(() => preloader.classList.add("done"), 600);
   });
   setTimeout(() => preloader.classList.add("done"), 2200);
+
+  // sombra en el header al hacer scroll (estilo navbar de la referencia)
+  const appHeader = document.querySelector(".app-header");
+  const onScroll = () =>
+    appHeader.classList.toggle("scrolled", window.scrollY > 8);
+  onScroll();
+  window.addEventListener("scroll", onScroll, { passive: true });
 
   function buildPills(list, active) {
     qualityPills.innerHTML = "";
@@ -289,6 +308,69 @@
     const s = seconds % 60;
     const pad = (n) => String(n).padStart(2, "0");
     return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`;
+  }
+
+  // estadísticas de descargas (persistidas en SQLite en el servidor)
+  let lastStats = null;
+
+  async function loadStats() {
+    try {
+      const res = await fetch("/api/stats", {
+        headers: { Accept: "application/json" },
+      });
+      if (!res.ok) return;
+      const json = await res.json();
+      if (!json?.ok || !json.data) return;
+      lastStats = json.data;
+      renderStats(json.data);
+    } catch {
+      /* las estadísticas no son críticas */
+    }
+  }
+
+  function fmtNumber(value) {
+    return Number(value || 0).toLocaleString(lang === "en" ? "en-US" : "es-ES");
+  }
+
+  function renderStats(stats) {
+    if (!stats) return;
+    const targets = [
+      ["statTotal", stats.total],
+      ["statVideos", stats.videos],
+      ["statAudios", stats.audios],
+      ["statToday", stats.hoy],
+    ];
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+    statsSection.hidden = false;
+    targets.forEach(([id, value]) => {
+      const el = $(id);
+      if (reduceMotion) {
+        el.textContent = fmtNumber(value);
+        el.dataset.count = String(value);
+        return;
+      }
+      animateCount(el, value);
+    });
+  }
+
+  function animateCount(el, target) {
+    const from = Number(el.dataset.count || "0") || 0;
+    const duration = 700;
+    const start = performance.now();
+    function step(now) {
+      const p = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - p, 3);
+      const value = Math.round(from + (target - from) * eased);
+      el.textContent = fmtNumber(value);
+      if (p < 1) {
+        requestAnimationFrame(step);
+      } else {
+        el.dataset.count = String(target);
+      }
+    }
+    requestAnimationFrame(step);
   }
 
   function extractHint(input) {
@@ -516,6 +598,7 @@
     result.hidden = false;
     result.scrollIntoView({ behavior: "smooth", block: "nearest" });
     toast(t("doneToast"));
+    loadStats();
   }
 
   $("rCopy").addEventListener("click", async () => {
@@ -547,4 +630,5 @@
 
   applyLang();
   setMode("video");
+  loadStats();
 })();

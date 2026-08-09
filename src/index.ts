@@ -21,6 +21,7 @@ import {
   ytmp4 as savetubeVideo,
   ytmp3 as savetubeAudio,
 } from "./services/savetube";
+import { getStats, recordDownload } from "./stats";
 import { DESKTOP_UA, extractVideoId, sanitizeFilename } from "./utils";
 
 const app = express();
@@ -199,6 +200,11 @@ app.get("/health", (_req, res) => {
   res.json({ ok: true, servicio: "ypi", tiempo: Math.round(process.uptime()) });
 });
 
+// cuántos archivos se han descargado (persistido en SQLite)
+app.get("/api/stats", (_req, res) => {
+  res.json({ ok: true, data: getStats() });
+});
+
 app.post("/api/video", async (req, res) => {
   const lang = pickLang(req.body?.lang);
   const limitError = beginDownload(req.ip || "unknown", lang);
@@ -252,6 +258,14 @@ app.post("/api/video", async (req, res) => {
       makeProgress(emit)
     );
     emit({ type: "progress", stage: "download", percent: 100 });
+
+    recordDownload({
+      tipo: "video",
+      calidad: info.calidad,
+      titulo: info.titulo || details.titulo,
+      videoId,
+      tamano: stored.size,
+    });
 
     const base = `${req.protocol}://${req.get("host")}`;
     const data = {
@@ -362,6 +376,14 @@ app.post("/api/audio", async (req, res) => {
       makeProgress(emit)
     );
     emit({ type: "progress", stage: "download", percent: 100 });
+
+    recordDownload({
+      tipo: "audio",
+      calidad: info.calidad || `${quality} kbps`,
+      titulo: details.titulo,
+      videoId,
+      tamano: stored.size,
+    });
 
     const base = `${req.protocol}://${req.get("host")}`;
     const data = {
