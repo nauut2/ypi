@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="YPi — descarga videos MP4 y audio MP3 de YouTube al instante. Minimalista, rápido y sin registros." />
+  <title>YPi · Descargador de YouTube</title>
+  <link rel="icon" href="https://i.ibb.co/hRmc03Sd/2D.jpg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    crossorigin="anonymous"
+  />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- Preloader estilo Neoxr -->
+  <div class="preloader" id="preloader" aria-hidden="true">
+    <div class="preloader-inner">
+      <div class="preloader-icon">
+        <img src="https://i.ibb.co/hRmc03Sd/2D.jpg" alt="" />
+      </div>
+      <div class="line-loader"><span></span></div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-inner">
+      <a class="brand" href="/" aria-label="YPi — inicio">
+        <img
+          class="brand-logo"
+          src="https://i.ibb.co/hRmc03Sd/2D.jpg"
+          alt="Logo de YPi"
+          onerror="this.style.display='none'"
+        />
+        <span class="brand-name">YPi</span>
+        <span class="brand-tag">studio downloader</span>
+      </a>
+      <nav class="header-nav">
+        <a
+          class="nav-link"
+          href="https://github.com/nauut2/ypi"
+          target="_blank"
+          rel="noopener"
+        >
+          <i class="bi bi-github" aria-hidden="true"></i><span>GitHub</span>
+        </a>
+        <span class="status-chip">
+          <i class="bi bi-circle-fill dot" aria-hidden="true"></i> En línea
+        </span>
+        <button id="themeToggle" class="icon-btn" type="button" aria-label="Cambiar tema">
+          <i class="bi bi-moon-stars" aria-hidden="true"></i>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+
+    <!-- Hero -->
+    <section class="hero">
+      <p class="kicker">YouTube Downloader · 100% Gratis</p>
+      <h1>Descarga videos y <span class="outline">audio</span><br />de YouTube</h1>
+      <p class="sub">
+        Pega un enlace, elige el formato y recibe un enlace directo al archivo.
+        Sin registros, sin anuncios, sin complicaciones.
+      </p>
+    </section>
+
+    <!-- Panel de descarga -->
+    <section class="panel download-panel" aria-label="Descargador">
+      <div class="panel-head">
+        <h2><i class="bi bi-youtube" aria-hidden="true"></i> Descargar</h2>
+        <p>Pega el enlace de YouTube — video, Short o enlace compartido.</p>
+      </div>
+
+      <div class="url-row">
+        <div class="url-input-wrap">
+          <i class="bi bi-link-45deg" aria-hidden="true"></i>
+          <input
+            id="url"
+            type="text"
+            inputmode="url"
+            placeholder="https://www.youtube.com/watch?v=…"
+            spellcheck="false"
+            autocomplete="off"
+            aria-label="Enlace de YouTube"
+          />
+        </div>
+        <button id="go" class="btn btn-primary" type="button">
+          <i class="bi bi-download" aria-hidden="true"></i>
+          <span>Descargar</span>
+        </button>
+      </div>
+
+      <div class="options">
+        <div class="seg" role="tablist" aria-label="Formato">
+          <button class="seg-btn active" role="tab" data-mode="video" type="button">
+            <i class="bi bi-film" aria-hidden="true"></i> Video
+            <em>MP4</em>
+          </button>
+          <button class="seg-btn" role="tab" data-mode="audio" type="button">
+            <i class="bi bi-file-earmark-music" aria-hidden="true"></i> Audio
+            <em>MP3</em>
+          </button>
+        </div>
+
+        <div class="quality" id="qualityWrap">
+          <span class="q-label">Calidad</span>
+          <div class="pills" id="qualityPills" role="group" aria-label="Calidad"></div>
+        </div>
+      </div>
+
+      <div class="progress" id="progress" hidden>
+        <span class="spinner" aria-hidden="true"></span>
+        <span id="progressText">Procesando…</span>
+      </div>
+    </section>
+
+    <!-- Resultado -->
+    <section class="result" id="result" hidden aria-label="Resultado">
+      <div class="panel result-card">
+        <div class="thumb-wrap">
+          <img id="rThumb" class="thumb" alt="Miniatura del video" />
+        </div>
+        <div class="r-info">
+          <h3 id="rTitle"></h3>
+          <p class="r-meta" id="rMeta"></p>
+          <div class="r-chips" id="rChips"></div>
+          <div class="r-link-row">
+            <div class="r-link-wrap">
+              <i class="bi bi-link-45deg" aria-hidden="true"></i>
+              <input
+                id="rLink"
+                class="r-link"
+                readonly
+                spellcheck="false"
+                aria-label="Enlace directo"
+              />
+            </div>
+            <button id="rCopy" class="btn btn-ghost" type="button" title="Copiar enlace">
+              <i class="bi bi-clipboard" aria-hidden="true"></i><span>Copiar</span>
+            </button>
+          </div>
+          <a id="rDownload" class="btn btn-primary btn-block" href="#" download>
+            <i class="bi bi-box-arrow-down" aria-hidden="true"></i>
+            <span>Descargar archivo</span>
+          </a>
+          <p class="r-hint" id="rHint"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pasos -->
+    <section class="features" aria-label="Cómo funciona">
+      <div class="feature">
+        <span class="feature-icon"><i class="bi bi-pencil-square" aria-hidden="true"></i></span>
+        <h3>Pega el enlace</h3>
+        <p>Copia cualquier URL de YouTube — videos, Shorts o enlaces compartidos.</p>
+      </div>
+      <div class="feature">
+        <span class="feature-icon"><i class="bi bi-sliders" aria-hidden="true"></i></span>
+        <h3>Elige el formato</h3>
+        <p>Video MP4 hasta 1080p con audio, o audio MP3 hasta 320 kbps.</p>
+      </div>
+      <div class="feature">
+        <span class="feature-icon"><i class="bi bi-link-45deg" aria-hidden="true"></i></span>
+        <h3>Obtén tu enlace</h3>
+        <p>El archivo se guarda en el servidor y recibes un enlace directo y corto.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Hecho con <span class="heart" aria-hidden="true">♥</span> por <strong>Naut</strong></p>
+    <p class="footer-sub">YPi · los archivos expiran automáticamente a las 24 horas</p>
+  </footer>
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+  <script src="app.js" defer></script>
+</body>
+</html>
