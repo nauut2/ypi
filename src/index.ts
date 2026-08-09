@@ -9,10 +9,13 @@ import {
   saveAudioBuffer,
   saveVideoBuffer,
 } from "./storage";
-import { ytmp3, AudioQuality } from "./services/cnvmp3";
+import { ytmp3 as cnvmp3Audio, AudioQuality } from "./services/cnvmp3";
 import { ytmp4 as convert1sVideo } from "./services/convert1s";
 import { fetchVideoDetails } from "./services/oembed";
-import { ytmp4 as savetubeVideo } from "./services/savetube";
+import {
+  ytmp4 as savetubeVideo,
+  ytmp3 as savetubeAudio,
+} from "./services/savetube";
 import { DESKTOP_UA, extractVideoId, sanitizeFilename } from "./utils";
 
 const app = express();
@@ -20,8 +23,6 @@ app.set("trust proxy", true);
 app.disable("x-powered-by");
 
 app.use(express.json({ limit: "100kb" }));
-
-// ---- Protecciones simples -------------------------------------------------
 
 const CONCURRENT_MAX = 4;
 const PER_IP_LIMIT = 5;
@@ -54,8 +55,7 @@ function endDownload(): void {
   activeDownloads = Math.max(0, activeDownloads - 1);
 }
 
-// ---- Progreso (SSE) --------------------------------------------------------
-
+// el cliente lee el progreso real por un stream de eventos
 type EmitFn = (event: Record<string, unknown>) => void;
 
 function sseStart(req: express.Request, res: express.Response): boolean {
@@ -73,7 +73,6 @@ function sseWrite(res: express.Response, event: Record<string, unknown>): void {
   res.write(`data: ${JSON.stringify(event)}\n\n`);
 }
 
-/** Emisor de progreso con throttle (máx. 1 evento por 200ms y por punto). */
 function makeProgress(emit: EmitFn) {
   let lastPct = -1;
   let lastTime = 0;
@@ -87,8 +86,6 @@ function makeProgress(emit: EmitFn) {
   };
 }
 
-// ---- Utilidades de video ---------------------------------------------------
-
 interface VideoInfo {
   url: string;
   referer: string;
@@ -97,23 +94,53 @@ interface VideoInfo {
   duracion: number;
 }
 
-/** SaveTube como motor principal; Convert1s como respaldo automático. */
+interface AudioInfo {
+  url: string;
+  archivo: string;
+  referer: string;
+  calidad?: string;
+}
+
+// corre todos los scraper a la vez; el primero en responder gana y
+// el resto se aborta para no gastar recursos
+async function raceScrapers<T>(
+  builders: Array<(signal: AbortSignal) => Promise<T>>
+): Promise<T> {
+  const controller = new AbortController();
+  try {
+    return await Promise.any(
+      builders.map((build) =>
+        build(controller.signal).then((value) => {
+          controller.abort();
+          return value;
+        })
+      )
+    );
+  } catch (error: any) {
+    const messages = (error?.errors || [])
+      .map((item: any) => item?.message)
+      .filter(Boolean)
+      .filter((m: string, i: number, all: string[]) => all.indexOf(m) === i)
+      .slice(0, 2)
+      .join(" | ");
+    throw new Error(messages || "Ningún servidor pudo completar la descarga.");
+  }
+}
+
 async function fetchVideo(
   fullUrl: string,
   quality: number,
   emit: EmitFn
 ): Promise<VideoInfo> {
-  try {
-    return await savetubeVideo(fullUrl, quality);
-  } catch {
-    emit({ type: "stage", label: "Cambiando de servidor de conversión…" });
-    return await convert1sVideo(fullUrl, quality, undefined, false, (pct) =>
-      emit({ type: "progress", stage: "convert", percent: pct })
-    );
-  }
+  emit({ type: "stage", label: "Buscando en varios servidores…" });
+  return await raceScrapers<VideoInfo>([
+    (signal) => savetubeVideo(fullUrl, quality, signal),
+    (signal) =>
+      convert1sVideo(fullUrl, quality, signal, true, (pct) =>
+        emit({ type: "progress", stage: "convert", percent: pct })
+      ),
+  ]);
 }
-
-// ---- Rutas API -------------------------------------------------------------
 
 app.get("/health", (_req, res) => {
   res.json({ ok: true, servicio: "ypi", tiempo: Math.round(process.uptime()) });
@@ -133,9 +160,9 @@ app.post("/api/video", async (req, res) => {
     res.status(400).json({ ok: false, error: "El enlace de YouTube no es válido." });
     return;
   }
-  if (![360, 720, 1080].includes(quality)) {
+  if (![360, 480, 720, 1080].includes(quality)) {
     endDownload();
-    res.status(400).json({ ok: false, error: "Calidad de video no válida (360, 720 o 1080)." });
+    res.status(400).json({ ok: false, error: "Calidad de video no válida (360, 480, 720 o 1080)." });
     return;
   }
 
@@ -229,9 +256,13 @@ app.post("/api/audio", async (req, res) => {
   };
 
   try {
-    emit({ type: "stage", label: "Obteniendo detalles del video…" });
+    emit({ type: "stage", label: "Buscando en varios servidores…" });
     const [info, details] = await Promise.all([
-      ytmp3(videoId, quality as AudioQuality),
+      raceScrapers<AudioInfo>([
+        (signal) => cnvmp3Audio(videoId, quality as AudioQuality, signal),
+        (signal) =>
+          savetubeAudio(`https://www.youtube.com/watch?v=${videoId}`, signal),
+      ]),
       fetchVideoDetails(videoId),
     ]);
     const filename = sanitizeFilename(
@@ -262,7 +293,7 @@ app.post("/api/audio", async (req, res) => {
       downloadUrl: `${base}/d/${stored.id}`,
       filename: stored.filename,
       size: stored.size,
-      calidad: `${quality} kbps`,
+      calidad: info.calidad || `${quality} kbps`,
       titulo: details.titulo,
       canal: details.canal,
       duracion: 0,
@@ -288,8 +319,6 @@ app.post("/api/audio", async (req, res) => {
   }
 });
 
-// ---- Enlace corto ----------------------------------------------------------
-
 app.get("/d/:id", async (req, res) => {
   const record = await resolveFile(req.params.id);
   if (!record) {
@@ -306,11 +335,7 @@ app.get("/d/:id", async (req, res) => {
   createFileStream(record).pipe(res);
 });
 
-// ---- Frontend --------------------------------------------------------------
-
 app.use(express.static(path.join(process.cwd(), "public")));
-
-// ---- Arranque --------------------------------------------------------------
 
 const PORT = Number(process.env.PORT) || 3000;
 
@@ -322,7 +347,7 @@ cleanupOldFiles().then((removed) => {
   if (removed > 0)
     console.log(`Limpieza: ${removed} archivos expirados eliminados.`);
 });
-// Con TTL de 3 minutos, limpiamos cada minuto.
+// con TTL de 3 minutos, limpiamos cada minuto
 setInterval(() => {
   cleanupOldFiles().catch(() => undefined);
 }, 60 * 1000);

@@ -35,7 +35,6 @@ async function ensureDir(): Promise<void> {
   await mkdir(DIR, { recursive: true });
 }
 
-/** Descarga un stream web (undici) a disco con límite de tamaño y progreso. */
 async function streamWebToDisk(
   body: ReadableStream<Uint8Array>,
   filePath: string,
@@ -65,7 +64,6 @@ async function streamWebToDisk(
   return written;
 }
 
-/** Descarga un stream de Node (axios) a disco con límite de tamaño y progreso. */
 async function streamNodeToDisk(
   stream: NodeJS.ReadableStream,
   filePath: string,
@@ -91,11 +89,9 @@ export interface SaveOptions {
   filename: string;
   mime: string;
   ext: string;
-  /** Cabeceras extra para la petición de descarga (p. ej. Referer). */
   headers?: Record<string, string>;
 }
 
-/** Guarda un video descargado vía undici (web stream). */
 export async function saveVideoBuffer(
   url: string,
   opts: SaveOptions,
@@ -123,7 +119,6 @@ export async function saveVideoBuffer(
   return finalize(id, filePath, opts, size);
 }
 
-/** Guarda un audio descargado vía axios (stream de Node). */
 export async function saveAudioBuffer(
   stream: NodeJS.ReadableStream,
   opts: SaveOptions,
@@ -184,7 +179,7 @@ export function getTTLSeconds(): number {
   return Math.round(TTL_MS / 1000);
 }
 
-/** Elimina archivos más viejos que TTL. Se ejecuta al arrancar y cada hora. */
+// borra lo que pasó el TTL; corre al arrancar y cada minuto
 export async function cleanupOldFiles(): Promise<number> {
   try {
     await ensureDir();

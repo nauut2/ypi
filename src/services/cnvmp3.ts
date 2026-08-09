@@ -39,7 +39,6 @@ async function request(
   return (await client.post(path, data, { signal })).data;
 }
 
-/** Convierte un valor (string, objeto, etc.) en un mensaje legible. */
 function toMessage(value: unknown, fallback: string): string {
   if (typeof value === "string" && value.trim()) return value;
   if (value && typeof value === "object") {
@@ -155,6 +154,7 @@ export interface AudioResult {
   url: string;
   archivo: string;
   referer: string;
+  calidad: string;
 }
 
 export async function ytmp3(
@@ -167,10 +167,11 @@ export async function ytmp3(
   }
 
   try {
-    return await Promise.any([
+    const winner = await Promise.any([
       fromCache(videoId, quality, signal),
       convert(videoId, quality, signal),
     ]);
+    return { ...winner, calidad: `${quality} kbps` };
   } catch (error: any) {
     throw new Error(
       error.errors?.map((item: any) => item.message).filter(Boolean).join(" | ") ||

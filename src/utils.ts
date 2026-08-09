@@ -1,6 +1,5 @@
 import { Agent, fetch } from "undici";
 
-/** Dispatcher con cabeceras grandes (YouTube responde con cabeceras enormes). */
 export const dispatcher = new Agent({ maxHeaderSize: 65536 });
 
 export const ANDROID_UA =
@@ -9,10 +8,6 @@ export const ANDROID_UA =
 export const DESKTOP_UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
-/**
- * Combina una señal opcional con un timeout. Devuelve una señal que se aborta
- * a los `ms` milisegundos o cuando la señal original se aborta.
- */
 export function withTimeout(
   signal: AbortSignal | undefined,
   ms: number
@@ -22,7 +17,6 @@ export function withTimeout(
   return AbortSignal.any([signal, timeout]);
 }
 
-/** Extrae el videoId de una URL de YouTube (watch, shorts, embed, youtu.be o ID pelado). */
 export function extractVideoId(input: string): string | null {
   const trimmed = input.trim();
   if (!trimmed) return null;
@@ -41,7 +35,6 @@ export function extractVideoId(input: string): string | null {
   return null;
 }
 
-/** Limpia un título para usarlo como nombre de archivo. */
 export function sanitizeFilename(title: string): string {
   const cleaned = title
     .replace(/[\\/:*?"<>|]/g, "")
@@ -56,10 +49,7 @@ interface TrackHeader {
   height: number;
 }
 
-/**
- * Busca el box `tkhd` (track header) dentro de un `moov` para extraer
- * la resolución del video. Devuelve null si no se encuentra.
- */
+// lee el box tkhd dentro del moov para sacar la resolución del mp4
 function findTrackHeader(
   buffer: Buffer,
   start: number,
@@ -78,7 +68,6 @@ function findTrackHeader(
       const found = findTrackHeader(buffer, offset + 8, offset + size, depth + 1);
       if (found) return found;
     } else if (type === "tkhd") {
-      // Box header (8) + version/flags (4)
       const base = offset + 12;
       const version = buffer[offset + 8];
       if (version === 1) {
@@ -99,7 +88,6 @@ function findTrackHeader(
   return null;
 }
 
-/** Recorre los boxes de primer nivel y busca `moov` para leer la resolución. */
 function parseResolution(buffer: Buffer): TrackHeader | null {
   let offset = 0;
   const len = buffer.length;
@@ -108,7 +96,7 @@ function parseResolution(buffer: Buffer): TrackHeader | null {
     const type = buffer.toString("latin1", offset + 4, offset + 8);
 
     if (size === 1) {
-      // Box de 64 bits — raro en YouTube; lo saltamos con cuidado.
+      // box de 64 bits: poco común en YouTube, lo saltamos
       if (offset + 16 > len) break;
       const big = Number(buffer.readBigUInt64BE(offset + 8));
       if (big < 16 || big > 0x7fffffff) break;
@@ -132,11 +120,7 @@ export interface InspectedFile {
   resolucion: { width: number; height: number };
 }
 
-/**
- * Inspecciona una URL de video MP4: pide el primer MB (range request),
- * obtiene el tamaño total desde Content-Range y parsea la resolución real
- * desde el box moov/tkhd.
- */
+// pide el primer MB (range request) y parsea el moov para ver la resolución real
 export async function inspectMp4Url(
   url: string,
   opts: { signal?: AbortSignal; headers?: Record<string, string> } = {}

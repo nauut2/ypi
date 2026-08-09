@@ -4,7 +4,7 @@
 <img src="https://i.ibb.co/hRmc03Sd/2D.jpg" width="120px" alt="Logo YPi">
 </p>
 
-> Descargador de **YouTube** minimalista, moderno y responsive: descarga el video en **MP4 (360p/720p/1080p)** o el audio en **MP3** y obtén un **enlace directo corto** al archivo guardado en el servidor.
+> Descargador de **YouTube** minimalista, moderno y responsive: descarga el video en **MP4 (360p/480p/720p/1080p)** o el audio en **MP3** y obtén un **enlace directo corto** al archivo guardado en el servidor.
 
 <p align="center">
 <img src="https://img.shields.io/badge/Status-Activo-22c55e?style=flat" alt="Status">
@@ -29,9 +29,9 @@
 
 **YPi** es una página web de descarga de YouTube con un backend en **TypeScript** que integra varios motores de descarga:
 
-- **Video MP4 (360p, 720p y 1080p)** — vía **SaveTube** (save-tube.com) con respaldo automático en **Convert1s**.
-- **Audio MP3 (96, 128, 256 y 320 kbps)** — vía *CnvMP3* con proxy de descarga.
-- **Detalles del video** (título, canal y miniatura) — vía el **oEmbed** oficial de YouTube.
+- **Video MP4 (360p, 480p, 720p y 1080p)** — se consultan varios motores en paralelo y responde el primero que consiga la calidad exacta.
+- **Audio MP3 (96, 128, 256 y 320 kbps)** — también con varios motores en paralelo.
+- **Detalles del video** (título, canal y miniatura) — desde el API público de YouTube.
 
 Al solicitar una descarga, el servidor **descarga el buffer del archivo, lo guarda localmente** y genera un **enlace corto** (`/d/AbC123xY`) que detecta automáticamente el dominio actual para que siempre funcione. La interfaz muestra el **porcentaje real de descarga** en tiempo real.
 
@@ -95,14 +95,14 @@ bun start
 ### Desde la web
 
 1. Pega el enlace de YouTube (video, Short o `youtu.be`).
-2. Elige **Video · MP4** (360p/720p/1080p) o **Audio · MP3** (96/128/256/320 kbps).
+2. Elige **Video · MP4** (360p/480p/720p/1080p) o **Audio · MP3** (96/128/256/320 kbps).
 3. Pulsa **Descargar** y sigue el **progreso real** hasta recibir tu enlace directo.
 
 ### API
 
 | Endpoint | Método | Descripción |
 |---|---|---|
-| `/api/video` | `POST` | `{ "url": "…", "quality": 360 \| 720 \| 1080 }` → video MP4 (SSE con progreso) |
+| `/api/video` | `POST` | `{ "url": "…", "quality": 360 \| 480 \| 720 \| 1080 }` → video MP4 (SSE con progreso) |
 | `/api/audio` | `POST` | `{ "url": "…", "quality": 128 }` → audio MP3 (96/128/256/320) |
 | `/d/:id` | `GET` | Descarga directa del archivo guardado |
 | `/health` | `GET` | Estado del servicio |
@@ -124,7 +124,7 @@ curl -X POST http://localhost:3000/api/audio \
     "filename": "Rick Astley - Never Gonna Give You Up.mp3",
     "size": 472670,
     "calidad": "128 kbps",
-    "expiraEn": 86400
+    "expiraEn": 180
   }
 }
 ```
@@ -141,13 +141,9 @@ ypi/
 │   └── app.js
 ├── src/                    # Backend TypeScript
 │   ├── index.ts            # Servidor Express + rutas API + enlace corto + progreso SSE
-│   ├── utils.ts            # withTimeout, extractVideoId, inspectMp4Url (parser MP4)
+│   ├── utils.ts            # Utilidades (videoId, resolución MP4, timeouts)
 │   ├── storage.ts          # Guardado local, IDs cortos, expiración 3 min
-│   └── services/
-│       ├── savetube.ts     # Video MP4 (save-tube.com, info cifrado AES)
-│       ├── convert1s.ts    # Video MP4 (Convert1s, respaldo)
-│       ├── cnvmp3.ts       # Audio MP3 (caché + conversión)
-│       └── oembed.ts       # Detalles del video vía oEmbed de YouTube
+│   └── services/           # Motores de descarga (video y audio)
 ├── downloads/              # Archivos descargados (se limpian solos)
 ├── package.json
 └── tsconfig.json

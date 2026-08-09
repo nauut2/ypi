@@ -1,4 +1,4 @@
-/* YPi · Descargador de YouTube — lógica del cliente */
+/* YPi · descargador de YouTube */
 (() => {
   "use strict";
 
@@ -8,7 +8,6 @@
   const goBtn = $("go");
   const segBtns = Array.from(document.querySelectorAll(".seg-btn"));
   const qualityPills = $("qualityPills");
-  const qualityWrap = $("qualityWrap");
   const progress = $("progress");
   const progressText = $("progressText");
   const progressFill = $("progressFill");
@@ -16,51 +15,50 @@
   const result = $("result");
   const toasts = $("toasts");
 
-  const VIDEO_QUALITIES = [360, 720, 1080];
+  const VIDEO_QUALITIES = [360, 480, 720, 1080];
   const AUDIO_QUALITIES = [128, 96, 256, 320];
 
-  let mode = "video"; // video | audio
+  let mode = "video";
   let quality = 360;
 
-  /* ---------- Tema claro / oscuro ---------- */
-
+  // tema: por defecto el del sistema, después lo que guardó el usuario
   const themeBtn = $("themeToggle");
   const themeIcon = themeBtn.querySelector("i");
 
   function applyTheme(theme) {
     document.documentElement.classList.toggle("light", theme === "light");
-    themeIcon.className =
-      theme === "light" ? "bi bi-sun" : "bi bi-moon-stars";
+    themeIcon.className = theme === "light" ? "bi bi-sun" : "bi bi-moon-stars";
     try {
       localStorage.setItem("ypi-theme", theme);
     } catch {
-      /* sin almacenamiento: ignora */
+      /* sin almacenamiento */
     }
   }
 
-  let savedTheme = "dark";
+  let initialTheme = "dark";
   try {
-    savedTheme = localStorage.getItem("ypi-theme") || "dark";
+    initialTheme =
+      localStorage.getItem("ypi-theme") ||
+      (window.matchMedia("(prefers-color-scheme: light)").matches
+        ? "light"
+        : "dark");
   } catch {
     /* ignora */
   }
-  applyTheme(savedTheme);
+  applyTheme(initialTheme);
 
   themeBtn.addEventListener("click", () => {
-    const next =
-      document.documentElement.classList.contains("light") ? "dark" : "light";
+    const next = document.documentElement.classList.contains("light")
+      ? "dark"
+      : "light";
     applyTheme(next);
   });
-
-  /* ---------- Preloader ---------- */
 
   const preloader = $("preloader");
   window.addEventListener("load", () => {
     setTimeout(() => preloader.classList.add("done"), 600);
   });
   setTimeout(() => preloader.classList.add("done"), 2200);
-
-  /* ---------- Toggle video / audio ---------- */
 
   function buildPills(list, active) {
     qualityPills.innerHTML = "";
@@ -99,8 +97,6 @@
     btn.addEventListener("click", () => setMode(btn.dataset.mode))
   );
 
-  /* ---------- Toasts ---------- */
-
   function toast(message, kind) {
     const el = document.createElement("div");
     el.className = `toast ${kind || "ok"}`;
@@ -122,8 +118,6 @@
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;");
   }
-
-  /* ---------- Utilidades ---------- */
 
   function formatBytes(bytes) {
     if (!bytes || bytes <= 0) return "—";
@@ -156,8 +150,6 @@
     return patterns.some((p) => p.test(input.trim()));
   }
 
-  /* ---------- Progreso ---------- */
-
   function setProgress(percent) {
     if (percent == null) return;
     const clamped = Math.max(0, Math.min(100, Math.round(percent)));
@@ -181,8 +173,6 @@
       }
     }
   }
-
-  /* ---------- Descarga ---------- */
 
   async function download() {
     const url = urlInput.value.trim();
@@ -219,7 +209,7 @@
 
       const contentType = res.headers.get("content-type") || "";
 
-      // Respuesta normal (errores 400/429) → JSON directo.
+      // los errores (400/429) llegan como JSON normal
       if (!contentType.includes("text/event-stream")) {
         const json = await res.json().catch(() => null);
         if (!res.ok || !json?.ok) {
@@ -229,7 +219,7 @@
         return;
       }
 
-      // Stream de eventos (progreso real).
+      // stream de eventos: progreso real de la descarga
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
@@ -266,7 +256,8 @@
         if (done || failure) break;
       }
       if (failure) throw new Error(failure);
-      if (!done) throw new Error("La conexión con el servidor se cerró antes de terminar.");
+      if (!done)
+        throw new Error("La conexión con el servidor se cerró antes de terminar.");
     } catch (error) {
       toast(error.message || "No se pudo completar la descarga.", "err");
     } finally {
@@ -277,8 +268,6 @@
       progressPct.textContent = "0%";
     }
   }
-
-  /* ---------- Resultado ---------- */
 
   function showResult(data) {
     const thumb = $("rThumb");
@@ -292,7 +281,7 @@
       thumb.alt = data.titulo || "Miniatura";
       thumb.style.display = "block";
       thumb.onerror = () => {
-        // Si pedimos maxresdefault y no existe, caemos a hqdefault (siempre disponible).
+        // maxresdefault no siempre existe; caemos a hqdefault
         const src = thumb.src;
         if (src.includes("maxresdefault") && !thumb.dataset.fallback) {
           thumb.dataset.fallback = "1";
@@ -360,8 +349,6 @@
       toast("Enlace copiado.");
     }
   });
-
-  /* ---------- Eventos ---------- */
 
   goBtn.addEventListener("click", download);
   urlInput.addEventListener("keydown", (event) => {

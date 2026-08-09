@@ -9,11 +9,7 @@ export interface VideoDetails {
 
 const EMPTY: VideoDetails = { titulo: null, canal: null, miniatura: null };
 
-/**
- * Obtiene los detalles de un video de YouTube (título, canal y miniatura)
- * usando el endpoint oEmbed oficial. Nunca lanza: si falla, devuelve vacío
- * para no romper el flujo de descarga.
- */
+// nunca lanza: si oEmbed falla, seguimos sin detalles
 export async function fetchVideoDetails(
   videoId: string
 ): Promise<VideoDetails> {
@@ -33,8 +29,7 @@ export async function fetchVideoDetails(
 
     const data: any = await response.json();
 
-    // La miniatura de oEmbed viene como hqdefault; la subimos a
-    // maxresdefault (más nitidez) y el frontend cae a hqdefault si falla.
+    // subimos la miniatura a maxresdefault; el frontend cae a hqdefault si no existe
     const thumb: string | null =
       typeof data.thumbnail_url === "string"
         ? data.thumbnail_url.replace(/hqdefault\.jpg$/, "maxresdefault.jpg")

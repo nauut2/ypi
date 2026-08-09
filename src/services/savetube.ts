@@ -1,19 +1,10 @@
 import { createDecipheriv } from "node:crypto";
 import { fetch } from "undici";
-import { dispatcher, withTimeout } from "../utils";
-
-/**
- * Scraper de SaveTube (save-tube.com).
- *
- * Flujo:
- *  1. GET  https://media.savetube.vip/api/random-cdn   → { cdn }
- *  2. POST https://{cdn}/v2/info  { url }              → { status, data } (cifrado AES-128-CBC)
- *  3. Descifrar `data` → { id, key, title, thumbnail, duration, video_formats, audio_formats }
- *  4. POST https://{cdn}/download { downloadType, quality, key } → { data: { downloadUrl } }
- */
+import { dispatcher, inspectMp4Url, withTimeout } from "../utils";
 
 const CDN_ENDPOINT = "https://media.savetube.vip/api/random-cdn";
 const ORIGIN = "https://save-tube.com";
+// clave de cifrado que usa la propia web para la info del video
 const AES_KEY = Buffer.from("C5D58EF67A7584E4A29F6C35BBC4EB12", "hex");
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
@@ -57,7 +48,6 @@ function headers(extra: Record<string, string> = {}): Record<string, string> {
   };
 }
 
-/** Pide un CDN de descarga activo al balanceador de SaveTube. */
 async function randomCdn(signal?: AbortSignal): Promise<string> {
   const response = await fetch(CDN_ENDPOINT, {
     headers: headers(),
@@ -75,7 +65,7 @@ async function randomCdn(signal?: AbortSignal): Promise<string> {
   return data.cdn as string;
 }
 
-/** Descifra la respuesta de /v2/info (AES-128-CBC, IV = primeros 16 bytes). */
+// la respuesta de /v2/info viene cifrada (AES-CBC); el IV son los primeros 16 bytes
 function decryptInfo(payload: string): SavetubeMeta {
   const raw = Buffer.from(payload, "base64");
   if (raw.length <= 16) {
@@ -91,7 +81,6 @@ function decryptInfo(payload: string): SavetubeMeta {
   return JSON.parse(plain) as SavetubeMeta;
 }
 
-/** Obtiene y descifra la información del video. */
 async function getMeta(
   url: string,
   signal?: AbortSignal
@@ -117,7 +106,6 @@ async function getMeta(
   return decryptInfo(data.data);
 }
 
-/** Genera el enlace directo de descarga para un formato concreto. */
 async function getDownloadLink(
   cdn: string,
   meta: SavetubeMeta,
@@ -148,41 +136,37 @@ async function getDownloadLink(
   return data.data.downloadUrl as string;
 }
 
-/** Elige el formato más cercano a la calidad pedida (exacta, o la mejor inferior). */
-function pickFormat(
-  formats: SavetubeFormat[],
-  requested: number
-): SavetubeFormat | null {
-  if (!formats?.length) return null;
-  const value = (f: SavetubeFormat) => f.quality || f.height || 0;
-  const exact = formats.find((f) => value(f) === requested);
-  if (exact) return exact;
-  const lower = formats.filter((f) => value(f) < requested);
-  if (lower.length) {
-    return lower.sort((a, b) => value(b) - value(a))[0];
-  }
-  return formats.sort((a, b) => value(a) - value(b))[0];
-}
-
-/** Descarga un video MP4 (SaveTube). */
 export async function ytmp4(
   url: string,
   quality: number,
   signal?: AbortSignal
 ): Promise<VideoResult> {
   const meta = await getMeta(url, signal);
-  const format = pickFormat(meta.video_formats || [], quality);
+  const format = (meta.video_formats || []).find(
+    (f) => (f.quality || f.height) === quality
+  );
   if (!format) {
-    throw new Error("Este video no ofrece formato MP4.");
+    throw new Error(`Este video no ofrece la calidad ${quality}p exacta.`);
   }
-  const actual = format.quality || format.height || quality;
+
   const cdn = await randomCdn(signal);
-  const link = await getDownloadLink(cdn, meta, "video", String(actual), signal);
+  const link = await getDownloadLink(cdn, meta, "video", String(quality), signal);
+
+  // confirmamos la resolución real del archivo antes de entregarlo
+  const file = await inspectMp4Url(link, {
+    signal,
+    headers: { Origin: ORIGIN, Referer: `${ORIGIN}/` },
+  });
+  if (file.resolucion.height && file.resolucion.height !== quality) {
+    throw new Error(
+      `El servidor entregó ${file.resolucion.height}p en lugar de ${quality}p.`
+    );
+  }
 
   return {
-    url: link,
+    url: file.url,
     referer: `${ORIGIN}/`,
-    calidad: `${actual}p`,
+    calidad: `${quality}p`,
     tamaño: 0,
     archivo: meta.title ? `${meta.title}.mp4` : null,
     titulo: meta.title || null,
@@ -192,22 +176,22 @@ export async function ytmp4(
   };
 }
 
-/** Descarga un audio MP3 (SaveTube, 128kbps). */
 export async function ytmp3(
   url: string,
   signal?: AbortSignal
-): Promise<{ url: string; archivo: string; referer: string }> {
+): Promise<{ url: string; archivo: string; referer: string; calidad: string }> {
   const meta = await getMeta(url, signal);
   const format = meta.audio_formats?.[0];
   if (!format) {
     throw new Error("Este video no ofrece formato MP3.");
   }
+  const actual = format.quality || 128;
   const cdn = await randomCdn(signal);
   const link = await getDownloadLink(
     cdn,
     meta,
     "audio",
-    String(format.quality || 128),
+    String(actual),
     signal
   );
 
@@ -215,5 +199,6 @@ export async function ytmp3(
     url: link,
     archivo: `${meta.title || "audio"}.mp3`,
     referer: `${ORIGIN}/`,
+    calidad: `${actual} kbps`,
   };
 }

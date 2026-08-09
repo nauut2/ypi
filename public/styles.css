@@ -1,4 +1,4 @@
-/* ============ YPi · Estilo Neoxr (mono studio) ============ */
+/* YPi · tema claro y oscuro */
 
 :root {
   --bg: #101010;
@@ -69,7 +69,7 @@ body {
   color: var(--accent-text);
 }
 
-/* ---------- Preloader ---------- */
+/* Preloader */
 
 .preloader {
   position: fixed;
@@ -155,7 +155,7 @@ body {
   to { left: 100%; }
 }
 
-/* ---------- Header ---------- */
+/* Header */
 
 .app-header {
   position: sticky;
@@ -252,10 +252,9 @@ html.light .app-header {
 }
 
 .icon-btn {
-  width: 38px;
   height: 38px;
   justify-content: center;
-  padding: 0;
+  padding: 0 14px;
   font-size: 1rem;
 }
 
@@ -281,7 +280,7 @@ html.light .app-header {
   50% { opacity: 0.4; }
 }
 
-/* ---------- Layout ---------- */
+/* Layout */
 
 .wrap {
   max-width: 1080px;
@@ -289,7 +288,7 @@ html.light .app-header {
   padding: 0 20px 40px;
 }
 
-/* ---------- Hero ---------- */
+/* Hero */
 
 .hero {
   text-align: center;
@@ -335,7 +334,7 @@ html.light .hero h1 .outline {
   font-size: clamp(0.95rem, 2vw, 1.08rem);
 }
 
-/* ---------- Paneles ---------- */
+/* Paneles */
 
 .panel {
   background: var(--card);
@@ -379,7 +378,7 @@ html.light .hero h1 .outline {
   font-size: 0.88rem;
 }
 
-/* ---------- Campo URL ---------- */
+/* Campo URL */
 
 .url-row {
   display: flex;
@@ -433,7 +432,7 @@ html.light .url-input-wrap:focus-within {
   color: var(--faint);
 }
 
-/* ---------- Botones ---------- */
+/* Botones */
 
 .btn {
   appearance: none;
@@ -511,7 +510,7 @@ html.light .btn-primary:hover {
   outline-offset: 2px;
 }
 
-/* ---------- Opciones ---------- */
+/* Opciones */
 
 .options {
   display: flex;
@@ -635,7 +634,7 @@ html.light .seg {
   margin-left: 2px;
 }
 
-/* ---------- Progreso ---------- */
+/* Progreso */
 
 .progress {
   display: flex;
@@ -699,7 +698,7 @@ html.light .seg {
   text-align: right;
 }
 
-/* ---------- Resultado ---------- */
+/* Resultado */
 
 .result {
   max-width: 760px;
@@ -834,7 +833,7 @@ html.light .seg {
   color: var(--faint);
 }
 
-/* ---------- Features ---------- */
+/* Features */
 
 .features {
   display: grid;
@@ -886,7 +885,7 @@ html.light .feature-icon {
   font-size: 0.86rem;
 }
 
-/* ---------- Footer ---------- */
+/* Footer */
 
 .site-footer {
   text-align: center;
@@ -919,7 +918,7 @@ html.light .feature-icon {
   color: var(--faint);
 }
 
-/* ---------- Toasts ---------- */
+/* Toasts */
 
 .toasts {
   position: fixed;
@@ -961,7 +960,7 @@ html.light .feature-icon {
 .toast.ok .t-icon { color: var(--success); }
 .toast.err .t-icon { color: var(--danger); }
 
-/* ---------- Responsive ---------- */
+/* Responsive */
 
 @media (max-width: 860px) {
   .result-card {
@@ -1048,6 +1047,11 @@ html.light .feature-icon {
   .icon-btn {
     width: 36px;
     height: 36px;
+    padding: 0;
+  }
+
+  .theme-label {
+    display: none;
   }
 
   .hero {

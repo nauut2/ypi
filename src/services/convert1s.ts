@@ -21,7 +21,6 @@ interface JsonOptions {
   body?: string;
 }
 
-/** Convierte un valor (string, objeto, etc.) en un mensaje legible. */
 function toMessage(value: unknown, fallback: string): string {
   if (typeof value === "string" && value.trim()) return value;
   if (value && typeof value === "object") {
@@ -37,7 +36,6 @@ function toMessage(value: unknown, fallback: string): string {
   return fallback;
 }
 
-/** Petición JSON con cabeceras de origen y timeout. */
 async function getJson(
   url: string,
   { signal, timeout = 30000, headers, method, body }: JsonOptions = {}
@@ -80,11 +78,6 @@ async function getJson(
   return data;
 }
 
-/**
- * Descarga un video MP4 (360p/720p/1080p) vía el conversor de Convert1s.
- * Hace una comprobación DMCA, inicia la conversión y sondea el estado
- * hasta que el archivo esté listo.
- */
 export async function ytmp4(
   url: string,
   quality: number,
@@ -128,6 +121,7 @@ export async function ytmp4(
   for (let attempt = 0; attempt < 120; attempt++) {
     const result = await getJson(conversion.statusUrl, { signal });
 
+    // a veces el estado trae un porcentaje, lo pasamos al cliente
     if (onProgress) {
       const percent = Number(
         result.progress ??
