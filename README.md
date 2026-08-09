@@ -1,13 +1,13 @@
 # YPi 🌿
 
 <p align="center">
-<img src="https://i.ibb.co/hRmc03Sd/2D.jpg" width="120px" alt="Logo YPi">
+<img src="https://i.ibb.co/hRmc03Sd/2D.jpg" width="120px" alt="YPi logo">
 </p>
 
-> Descargador de **YouTube** minimalista, moderno y responsive: descarga el video en **MP4 (360p/480p/720p/1080p)** o el audio en **MP3** y obtén un **enlace directo corto** al archivo guardado en el servidor.
+> Minimalist, modern and responsive **YouTube** downloader: get your video as **MP4 (360p/480p/720p/1080p)** or your audio as **MP3**, plus a **short direct link** to the file stored on the server.
 
 <p align="center">
-<img src="https://img.shields.io/badge/Status-Activo-22c55e?style=flat" alt="Status">
+<img src="https://img.shields.io/badge/Status-Active-22c55e?style=flat" alt="Status">
 <img src="https://img.shields.io/badge/Node.js-v20+-16a34a?style=flat&logo=nodedotjs&logoColor=white" alt="Node.js">
 <img src="https://img.shields.io/badge/TypeScript-5.x-3178c6?style=flat&logo=typescript&logoColor=white" alt="TypeScript">
 <img src="https://img.shields.io/badge/Express-4.x-0f172a?style=flat&logo=express&logoColor=white" alt="Express">
@@ -16,31 +16,36 @@
 
 <p align="center">
 <a href="https://github.com/nauut2/ypi">
-<img src="https://img.shields.io/badge/Repositorio-YPi-7c3aed?style=for-the-badge&logo=github&logoColor=white" alt="Repositorio">
+<img src="https://img.shields.io/badge/Repository-YPi-7c3aed?style=for-the-badge&logo=github&logoColor=white" alt="Repository">
+</a>
+<a href="./README.es.md">
+<img src="https://img.shields.io/badge/Español-README-16a34a?style=for-the-badge" alt="Read in Spanish">
 </a>
 </p>
 
 > [!NOTE]
-> **YPi** está pensado para ofrecer una experiencia limpia y sin fricción: pegas un enlace, eliges formato y recibes un enlace directo. Los archivos se guardan localmente y **expiran automáticamente a los 3 minutos** (suficiente para descargar y limpiar el servidor).
+> **YPi** is built for a clean, frictionless experience: paste a link, pick a format, get a direct link. Files are stored locally and **expire automatically after 3 minutes** — plenty of time to download while keeping the server tidy.
 
 ---
 
-## 🎬 Descripción
+## 🎬 Overview
 
-**YPi** es una página web de descarga de YouTube con un backend en **TypeScript** que integra varios motores de descarga:
+**YPi** is a YouTube downloader web app with a **TypeScript** backend that combines several download engines:
 
-- **Video MP4 (360p, 480p, 720p y 1080p)** — se consultan varios motores en paralelo y responde el primero que consiga la calidad exacta.
-- **Audio MP3 (96, 128, 256 y 320 kbps)** — también con varios motores en paralelo.
-- **Detalles del video** (título, canal y miniatura) — desde el API público de YouTube.
+- **MP4 video (360p, 480p, 720p & 1080p)** — engines run in parallel and the first one to deliver the **exact** quality wins (it never silently downgrades).
+- **MP3 audio (96, 128, 256 & 320 kbps)** — also raced in parallel; the fastest response wins.
+- **Video details** (title, channel and thumbnail) — fetched from YouTube's public API.
+- **Real download progress** — the UI shows the actual percentage of the download as it happens.
+- **Bilingual UI** — switch between Spanish and English at any time (ES/EN toggle in the header, remembered on your next visit).
 
-Al solicitar una descarga, el servidor **descarga el buffer del archivo, lo guarda localmente** y genera un **enlace corto** (`/d/AbC123xY`) que detecta automáticamente el dominio actual para que siempre funcione. La interfaz muestra el **porcentaje real de descarga** en tiempo real.
+When you request a download, the server **downloads the file buffer, saves it locally** and generates a **short link** (`/d/AbC123xY`) that automatically detects the current domain, so it always works. The interface shows the **real download percentage** in real time.
 
-## 🍡 Requisitos
+## 🍡 Requirements
 
-| Requisito | Descripción |
+| Requirement | Description |
 |---|---|
-| Node.js v20+ | Para ejecutar el servidor |
-| Bun 1.x | Para instalar dependencias y ejecutar los scripts |
+| Node.js v20+ | To run the server |
+| Bun 1.x | To install dependencies and run the scripts |
 
 <p>
 <a href="https://nodejs.org/en/download"><img src="https://img.shields.io/badge/Node.js-1e3a8a?style=flat&logo=nodedotjs&logoColor=white" alt="Node.js"></a>
@@ -49,10 +54,10 @@ Al solicitar una descarga, el servidor **descarga el buffer del archivo, lo guar
 
 ---
 
-## 🍡 Instalación =>
+## 🍡 Installation
 
 <details>
-<summary><strong>🍃 Linux / macOS / Windows</summary>
+<summary><strong>🍃 Linux / macOS / Windows</strong></summary>
 
 ```bash
 git clone https://github.com/nauut2/ypi.git
@@ -67,12 +72,12 @@ bun install
 bun run dev
 ```
 
-> La app estará disponible en `http://localhost:3000` (respetando la variable `PORT` si existe).
+> The app will be available at `http://localhost:3000` (respecting the `PORT` variable if set).
 
 </details>
 
 <details>
-<summary><strong>🍀 Producción</summary>
+<summary><strong>🍀 Production</strong></summary>
 
 ```bash
 bun install
@@ -86,33 +91,33 @@ bun start
 
 </details>
 
-> 🦎 No se necesitan variables de entorno ni claves API para funcionar.
+> 🦎 No environment variables or API keys needed.
 
 ---
 
-## 📦 Uso
+## 📦 Usage
 
-### Desde la web
+### From the web
 
-1. Pega el enlace de YouTube (video, Short o `youtu.be`).
-2. Elige **Video · MP4** (360p/480p/720p/1080p) o **Audio · MP3** (96/128/256/320 kbps).
-3. Pulsa **Descargar** y sigue el **progreso real** hasta recibir tu enlace directo.
+1. Paste the YouTube link (video, Short or `youtu.be`).
+2. Choose **Video · MP4** (360p/480p/720p/1080p) or **Audio · MP3** (96/128/256/320 kbps).
+3. Hit **Download** and follow the **real progress** until you get your direct link.
 
 ### API
 
-| Endpoint | Método | Descripción |
+| Endpoint | Method | Description |
 |---|---|---|
-| `/api/video` | `POST` | `{ "url": "…", "quality": 360 \| 480 \| 720 \| 1080 }` → video MP4 (SSE con progreso) |
-| `/api/audio` | `POST` | `{ "url": "…", "quality": 128 }` → audio MP3 (96/128/256/320) |
-| `/d/:id` | `GET` | Descarga directa del archivo guardado |
-| `/health` | `GET` | Estado del servicio |
+| `/api/video` | `POST` | `{ "url": "…", "quality": 360 \| 480 \| 720 \| 1080, "lang": "es" \| "en" }` → MP4 video (SSE progress) |
+| `/api/audio` | `POST` | `{ "url": "…", "quality": 128, "lang": "es" \| "en" }` → MP3 audio (96/128/256/320) |
+| `/d/:id.mp4` · `/d/:id.mp3` | `GET` | Direct download of the stored file (with extension) |
+| `/health` | `GET` | Service status |
 
-**Ejemplo:**
+**Example:**
 
 ```bash
 curl -X POST http://localhost:3000/api/audio \
   -H "Content-Type: application/json" \
-  -d '{"url":"https://www.youtube.com/watch?v=dQw4w9WgXcQ","quality":128}'
+  -d '{"url":"https://www.youtube.com/watch?v=dQw4w9WgXcQ","quality":128,"lang":"en"}'
 ```
 
 ```json
@@ -120,7 +125,7 @@ curl -X POST http://localhost:3000/api/audio \
   "ok": true,
   "data": {
     "id": "8dj9vC8r",
-    "downloadUrl": "http://localhost:3000/d/8dj9vC8r",
+    "downloadUrl": "http://localhost:3000/d/8dj9vC8r.mp3",
     "filename": "Rick Astley - Never Gonna Give You Up.mp3",
     "size": 472670,
     "calidad": "128 kbps",
@@ -131,7 +136,7 @@ curl -X POST http://localhost:3000/api/audio \
 
 ---
 
-## 🧬 Estructura del proyecto
+## 🧬 Project structure
 
 ```txt
 ypi/
@@ -139,27 +144,27 @@ ypi/
 │   ├── index.html
 │   ├── styles.css
 │   └── app.js
-├── src/                    # Backend TypeScript
-│   ├── index.ts            # Servidor Express + rutas API + enlace corto + progreso SSE
-│   ├── utils.ts            # Utilidades (videoId, resolución MP4, timeouts)
-│   ├── storage.ts          # Guardado local, IDs cortos, expiración 3 min
-│   └── services/           # Motores de descarga (video y audio)
-├── downloads/              # Archivos descargados (se limpian solos)
+├── src/                    # TypeScript backend
+│   ├── index.ts            # Express server + API routes + short links + SSE progress
+│   ├── utils.ts            # Utilities (videoId, MP4 resolution, timeouts)
+│   ├── storage.ts          # Local storage, short IDs, 3-minute expiry
+│   └── services/           # Download engines (video & audio)
+├── downloads/              # Downloaded files (self-cleaning)
 ├── package.json
 └── tsconfig.json
 ```
 
 ---
 
-> 🍀 ¿Quieres contribuir? Las aportaciones son bienvenidas mediante **issues** y **pull requests**.
+> 🍀 Want to contribute? Pull requests and issues are welcome.
 
 ---
 
-## ⚖️ Aclaración legal
+## ⚖️ Legal notice
 
-> Este proyecto **no está afiliado a YouTube ni a Google**.
-> Es una herramienta independiente para uso personal y educativo.
-> **Respeta los derechos de autor** y las condiciones de servicio de YouTube al descargar contenido.
+> This project is **not affiliated with YouTube or Google**.
+> It is an independent tool for personal and educational use.
+> **Respect copyright** and YouTube's terms of service when downloading content.
 
 ---
 

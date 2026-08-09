@@ -1,6 +1,11 @@
 import { createDecipheriv } from "node:crypto";
 import { fetch } from "undici";
-import { dispatcher, inspectMp4Url, withTimeout } from "../utils";
+import {
+  dispatcher,
+  inspectMp4Url,
+  InspectedFile,
+  withTimeout,
+} from "../utils";
 
 const CDN_ENDPOINT = "https://media.savetube.vip/api/random-cdn";
 const ORIGIN = "https://save-tube.com";
@@ -48,6 +53,12 @@ function headers(extra: Record<string, string> = {}): Record<string, string> {
   };
 }
 
+// "720p", 720 o "720" terminan siendo 720
+function normQ(value: unknown): number {
+  const parsed = Number(String(value ?? "").replace(/\D/g, ""));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
 async function randomCdn(signal?: AbortSignal): Promise<string> {
   const response = await fetch(CDN_ENDPOINT, {
     headers: headers(),
@@ -56,11 +67,11 @@ async function randomCdn(signal?: AbortSignal): Promise<string> {
     signal: withTimeout(signal, 10000),
   });
   if (!response.ok) {
-    throw new Error(`SaveTube respondió HTTP ${response.status}.`);
+    throw new Error(`El servidor respondió HTTP ${response.status}.`);
   }
   const data: any = await response.json();
   if (!data?.cdn) {
-    throw new Error("SaveTube no pudo asignar un servidor de descarga.");
+    throw new Error("No se pudo asignar un servidor de descarga.");
   }
   return data.cdn as string;
 }
@@ -69,7 +80,7 @@ async function randomCdn(signal?: AbortSignal): Promise<string> {
 function decryptInfo(payload: string): SavetubeMeta {
   const raw = Buffer.from(payload, "base64");
   if (raw.length <= 16) {
-    throw new Error("SaveTube devolvió datos de video inválidos.");
+    throw new Error("El servidor devolvió datos de video inválidos.");
   }
   const iv = raw.subarray(0, 16);
   const ciphertext = raw.subarray(16);
@@ -98,8 +109,8 @@ async function getMeta(
   if (!response.ok || !data?.status || !data?.data) {
     throw new Error(
       (response.status === 429
-        ? "Demasiadas peticiones a SaveTube. Inténtalo en unos segundos."
-        : "SaveTube no pudo procesar el video.") +
+        ? "Demasiadas peticiones. Inténtalo en unos segundos."
+        : "El servidor no pudo procesar el video.") +
         (response.ok ? "" : ` (HTTP ${response.status})`)
     );
   }
@@ -129,11 +140,37 @@ async function getDownloadLink(
   if (!response.ok || !data?.status || !data?.data?.downloadUrl) {
     throw new Error(
       data?.message && data.message !== "200"
-        ? `SaveTube no generó el enlace: ${data.message}.`
-        : "SaveTube no generó el enlace de descarga."
+        ? `No se generó el enlace de descarga: ${data.message}.`
+        : "No se generó el enlace de descarga."
     );
   }
   return data.data.downloadUrl as string;
+}
+
+// el CDN tarda unos segundos en procesar el archivo; reintentamos la inspección
+async function inspectWithRetry(
+  url: string,
+  signal?: AbortSignal,
+  attempts = 4
+): Promise<InspectedFile> {
+  let lastError: unknown = null;
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    if (signal?.aborted) break;
+    try {
+      return await inspectMp4Url(url, {
+        signal,
+        headers: { Origin: ORIGIN, Referer: `${ORIGIN}/` },
+      });
+    } catch (error) {
+      lastError = error;
+      if (attempt < attempts - 1 && !signal?.aborted) {
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+      }
+    }
+  }
+  throw lastError instanceof Error
+    ? lastError
+    : new Error("El archivo aún no está listo en el servidor.");
 }
 
 export async function ytmp4(
@@ -143,7 +180,7 @@ export async function ytmp4(
 ): Promise<VideoResult> {
   const meta = await getMeta(url, signal);
   const format = (meta.video_formats || []).find(
-    (f) => (f.quality || f.height) === quality
+    (f) => normQ(f.quality ?? f.height) === quality
   );
   if (!format) {
     throw new Error(`Este video no ofrece la calidad ${quality}p exacta.`);
@@ -153,10 +190,7 @@ export async function ytmp4(
   const link = await getDownloadLink(cdn, meta, "video", String(quality), signal);
 
   // confirmamos la resolución real del archivo antes de entregarlo
-  const file = await inspectMp4Url(link, {
-    signal,
-    headers: { Origin: ORIGIN, Referer: `${ORIGIN}/` },
-  });
+  const file = await inspectWithRetry(link, signal);
   if (file.resolucion.height && file.resolucion.height !== quality) {
     throw new Error(
       `El servidor entregó ${file.resolucion.height}p en lugar de ${quality}p.`
@@ -167,7 +201,7 @@ export async function ytmp4(
     url: file.url,
     referer: `${ORIGIN}/`,
     calidad: `${quality}p`,
-    tamaño: 0,
+    tamaño: file.size,
     archivo: meta.title ? `${meta.title}.mp4` : null,
     titulo: meta.title || null,
     canal: null,
@@ -185,7 +219,7 @@ export async function ytmp3(
   if (!format) {
     throw new Error("Este video no ofrece formato MP3.");
   }
-  const actual = format.quality || 128;
+  const actual = normQ(format.quality) || 128;
   const cdn = await randomCdn(signal);
   const link = await getDownloadLink(
     cdn,

@@ -138,7 +138,7 @@ async function convert(
     );
   }
   if (!result.download_link) {
-    throw new Error("CnvMP3 no devolvió la URL del audio.");
+    throw new Error("El servidor no devolvió la URL del audio.");
   }
 
   await validate(result.download_link, signal);

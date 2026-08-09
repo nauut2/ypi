@@ -10,7 +10,12 @@ import {
   saveVideoBuffer,
 } from "./storage";
 import { ytmp3 as cnvmp3Audio, AudioQuality } from "./services/cnvmp3";
-import { ytmp4 as convert1sVideo } from "./services/convert1s";
+import {
+  ytmp4 as convert1sVideo,
+  ytmp3 as convert1sAudio,
+} from "./services/convert1s";
+import { ytmp4 as androidVideo } from "./services/android";
+import { ytmp3 as yt2songAudio } from "./services/yt2song";
 import { fetchVideoDetails } from "./services/oembed";
 import {
   ytmp4 as savetubeVideo,
@@ -30,6 +35,50 @@ const PER_IP_WINDOW = 60_000;
 let activeDownloads = 0;
 const hits = new Map<string, number[]>();
 
+// mensajes según el idioma que pide el cliente (es/en)
+const T = {
+  es: {
+    rateLimited: "Demasiadas peticiones. Espera un momento.",
+    busy: "Hay muchas descargas en curso. Inténtalo en unos segundos.",
+    invalidUrl: "El enlace de YouTube no es válido.",
+    invalidVideoQuality: "Calidad de video no válida (360, 480, 720 o 1080).",
+    invalidAudioQuality: "Calidad de audio no válida.",
+    stageSearch: "Buscando en varios servidores…",
+    stageDetails: "Obteniendo detalles del video…",
+    stageDownloadVideo: "Descargando el archivo MP4…",
+    stageDownloadAudio: "Descargando el archivo MP3…",
+    videoError: "Error al descargar el video.",
+    audioError: "Error al descargar el audio.",
+    raceFail: "No se pudo completar la descarga. Inténtalo en unos segundos.",
+    notFound: "Archivo no encontrado o expirado.",
+  },
+  en: {
+    rateLimited: "Too many requests. Please wait a moment.",
+    busy: "Too many downloads in progress. Try again in a few seconds.",
+    invalidUrl: "The YouTube link is not valid.",
+    invalidVideoQuality: "Invalid video quality (360, 480, 720 or 1080).",
+    invalidAudioQuality: "Invalid audio quality.",
+    stageSearch: "Searching on several servers…",
+    stageDetails: "Getting video details…",
+    stageDownloadVideo: "Downloading the MP4 file…",
+    stageDownloadAudio: "Downloading the MP3 file…",
+    videoError: "Error downloading the video.",
+    audioError: "Error downloading the audio.",
+    raceFail: "Could not complete the download. Try again in a few seconds.",
+    notFound: "File not found or expired.",
+  },
+} as const;
+
+function t(lang: string, key: keyof typeof T.es): string {
+  const dict = lang === "en" ? T.en : T.es;
+  return dict[key];
+}
+
+// acepta "en", "en-US", "es-ES", etc.
+function pickLang(value: unknown): string {
+  return String(value || "").toLowerCase().startsWith("en") ? "en" : "es";
+}
+
 function rateLimited(ip: string): boolean {
   const now = Date.now();
   const recent = (hits.get(ip) || []).filter((t) => now - t < PER_IP_WINDOW);
@@ -42,10 +91,10 @@ function rateLimited(ip: string): boolean {
   return false;
 }
 
-function beginDownload(ip: string): string | null {
-  if (rateLimited(ip)) return "Demasiadas peticiones. Espera un momento.";
+function beginDownload(ip: string, lang: string): string | null {
+  if (rateLimited(ip)) return t(lang, "rateLimited");
   if (activeDownloads >= CONCURRENT_MAX) {
-    return "Hay muchas descargas en curso. Inténtalo en unos segundos.";
+    return t(lang, "busy");
   }
   activeDownloads++;
   return null;
@@ -95,51 +144,55 @@ interface VideoInfo {
 }
 
 interface AudioInfo {
-  url: string;
+  url?: string;
   archivo: string;
   referer: string;
   calidad?: string;
+  stream?: NodeJS.ReadableStream;
 }
 
 // corre todos los scraper a la vez; el primero en responder gana y
 // el resto se aborta para no gastar recursos
 async function raceScrapers<T>(
-  builders: Array<(signal: AbortSignal) => Promise<T>>
+  builders: Array<(signal: AbortSignal) => Promise<T>>,
+  lang: string
 ): Promise<T> {
-  const controller = new AbortController();
+  const controllers = builders.map(() => new AbortController());
   try {
-    return await Promise.any(
-      builders.map((build) =>
-        build(controller.signal).then((value) => {
-          controller.abort();
-          return value;
-        })
-      )
+    const tagged = builders.map((build, index) =>
+      build(controllers[index].signal).then((value) => ({ value, index }))
     );
-  } catch (error: any) {
-    const messages = (error?.errors || [])
-      .map((item: any) => item?.message)
-      .filter(Boolean)
-      .filter((m: string, i: number, all: string[]) => all.indexOf(m) === i)
-      .slice(0, 2)
-      .join(" | ");
-    throw new Error(messages || "Ningún servidor pudo completar la descarga.");
+    const winner = await Promise.any(tagged);
+    // abortamos solo a los perdedores; el ganador conserva su señal
+    controllers.forEach((controller, index) => {
+      if (index !== winner.index) controller.abort();
+    });
+    return winner.value;
+  } catch {
+    controllers.forEach((controller) => controller.abort());
+    throw new Error(t(lang, "raceFail"));
   }
 }
 
 async function fetchVideo(
   fullUrl: string,
   quality: number,
-  emit: EmitFn
+  emit: EmitFn,
+  lang: string
 ): Promise<VideoInfo> {
-  emit({ type: "stage", label: "Buscando en varios servidores…" });
-  return await raceScrapers<VideoInfo>([
-    (signal) => savetubeVideo(fullUrl, quality, signal),
-    (signal) =>
-      convert1sVideo(fullUrl, quality, signal, true, (pct) =>
-        emit({ type: "progress", stage: "convert", percent: pct })
-      ),
-  ]);
+  const videoId = extractVideoId(fullUrl) || "";
+  emit({ type: "stage", label: t(lang, "stageSearch") });
+  return await raceScrapers<VideoInfo>(
+    [
+      (signal) => savetubeVideo(fullUrl, quality, signal),
+      (signal) =>
+        convert1sVideo(fullUrl, quality, signal, true, (pct) =>
+          emit({ type: "progress", stage: "convert", percent: pct })
+        ),
+      (signal) => androidVideo(videoId, quality, signal),
+    ],
+    lang
+  );
 }
 
 app.get("/health", (_req, res) => {
@@ -147,7 +200,8 @@ app.get("/health", (_req, res) => {
 });
 
 app.post("/api/video", async (req, res) => {
-  const limitError = beginDownload(req.ip || "unknown");
+  const lang = pickLang(req.body?.lang);
+  const limitError = beginDownload(req.ip || "unknown", lang);
   const videoId = extractVideoId(String(req.body?.url || ""));
   const quality = Number(req.body?.quality || 360);
 
@@ -157,12 +211,12 @@ app.post("/api/video", async (req, res) => {
   }
   if (!videoId) {
     endDownload();
-    res.status(400).json({ ok: false, error: "El enlace de YouTube no es válido." });
+    res.status(400).json({ ok: false, error: t(lang, "invalidUrl") });
     return;
   }
   if (![360, 480, 720, 1080].includes(quality)) {
     endDownload();
-    res.status(400).json({ ok: false, error: "Calidad de video no válida (360, 480, 720 o 1080)." });
+    res.status(400).json({ ok: false, error: t(lang, "invalidVideoQuality") });
     return;
   }
 
@@ -172,11 +226,12 @@ app.post("/api/video", async (req, res) => {
   };
 
   try {
-    emit({ type: "stage", label: "Obteniendo detalles del video…" });
+    emit({ type: "stage", label: t(lang, "stageDetails") });
     const info = await fetchVideo(
       `https://www.youtube.com/watch?v=${videoId}`,
       quality,
-      emit
+      emit,
+      lang
     );
     const details = await fetchVideoDetails(videoId);
 
@@ -184,7 +239,7 @@ app.post("/api/video", async (req, res) => {
       (info.titulo || details.titulo || "video").replace(/\.mp4$/i, "")
     );
 
-    emit({ type: "stage", label: "Descargando el archivo MP4…" });
+    emit({ type: "stage", label: t(lang, "stageDownloadVideo") });
     emit({ type: "progress", stage: "download", percent: 0 });
     const stored = await saveVideoBuffer(
       info.url,
@@ -201,7 +256,7 @@ app.post("/api/video", async (req, res) => {
     const base = `${req.protocol}://${req.get("host")}`;
     const data = {
       id: stored.id,
-      downloadUrl: `${base}/d/${stored.id}`,
+      downloadUrl: `${base}/d/${stored.id}.${stored.ext}`,
       filename: stored.filename,
       size: stored.size,
       calidad: info.calidad,
@@ -218,7 +273,7 @@ app.post("/api/video", async (req, res) => {
       res.json({ ok: true, data });
     }
   } catch (error: any) {
-    const message = error?.message || "Error al descargar el video.";
+    const message = error?.message || t(lang, "videoError");
     if (sse) {
       emit({ type: "error", message });
       res.end();
@@ -231,7 +286,8 @@ app.post("/api/video", async (req, res) => {
 });
 
 app.post("/api/audio", async (req, res) => {
-  const limitError = beginDownload(req.ip || "unknown");
+  const lang = pickLang(req.body?.lang);
+  const limitError = beginDownload(req.ip || "unknown", lang);
   const videoId = extractVideoId(String(req.body?.url || ""));
   const quality = Number(req.body?.quality || 128);
 
@@ -241,12 +297,12 @@ app.post("/api/audio", async (req, res) => {
   }
   if (!videoId) {
     endDownload();
-    res.status(400).json({ ok: false, error: "El enlace de YouTube no es válido." });
+    res.status(400).json({ ok: false, error: t(lang, "invalidUrl") });
     return;
   }
   if (![96, 128, 256, 320].includes(quality)) {
     endDownload();
-    res.status(400).json({ ok: false, error: "Calidad de audio no válida." });
+    res.status(400).json({ ok: false, error: t(lang, "invalidAudioQuality") });
     return;
   }
 
@@ -256,28 +312,48 @@ app.post("/api/audio", async (req, res) => {
   };
 
   try {
-    emit({ type: "stage", label: "Buscando en varios servidores…" });
+    emit({ type: "stage", label: t(lang, "stageSearch") });
     const [info, details] = await Promise.all([
-      raceScrapers<AudioInfo>([
-        (signal) => cnvmp3Audio(videoId, quality as AudioQuality, signal),
-        (signal) =>
-          savetubeAudio(`https://www.youtube.com/watch?v=${videoId}`, signal),
-      ]),
+      raceScrapers<AudioInfo>(
+        [
+          (signal) => cnvmp3Audio(videoId, quality as AudioQuality, signal),
+          (signal) =>
+            savetubeAudio(`https://www.youtube.com/watch?v=${videoId}`, signal),
+          (signal) =>
+            convert1sAudio(
+              `https://www.youtube.com/watch?v=${videoId}`,
+              quality,
+              signal,
+              (pct) => emit({ type: "progress", stage: "convert", percent: pct })
+            ),
+          (signal) =>
+            yt2songAudio(
+              `https://www.youtube.com/watch?v=${videoId}`,
+              quality,
+              signal
+            ),
+        ],
+        lang
+      ),
       fetchVideoDetails(videoId),
     ]);
     const filename = sanitizeFilename(
       (info.archivo || details.titulo || "audio").replace(/\.mp3$/, "")
     );
 
-    emit({ type: "stage", label: "Descargando el archivo MP3…" });
+    emit({ type: "stage", label: t(lang, "stageDownloadAudio") });
     emit({ type: "progress", stage: "download", percent: 0 });
-    const stream = await axios.get(info.url, {
-      responseType: "stream",
-      timeout: 180000,
-      headers: { Referer: info.referer, "User-Agent": DESKTOP_UA },
-    });
+    const stream = info.stream
+      ? info.stream
+      : (
+          await axios.get(info.url as string, {
+            responseType: "stream",
+            timeout: 180000,
+            headers: { Referer: info.referer, "User-Agent": DESKTOP_UA },
+          })
+        ).data;
     const stored = await saveAudioBuffer(
-      stream.data,
+      stream,
       {
         filename: `${filename}.mp3`,
         mime: "audio/mpeg",
@@ -290,7 +366,7 @@ app.post("/api/audio", async (req, res) => {
     const base = `${req.protocol}://${req.get("host")}`;
     const data = {
       id: stored.id,
-      downloadUrl: `${base}/d/${stored.id}`,
+      downloadUrl: `${base}/d/${stored.id}.${stored.ext}`,
       filename: stored.filename,
       size: stored.size,
       calidad: info.calidad || `${quality} kbps`,
@@ -307,7 +383,7 @@ app.post("/api/audio", async (req, res) => {
       res.json({ ok: true, data });
     }
   } catch (error: any) {
-    const message = error?.message || "Error al descargar el audio.";
+    const message = error?.message || t(lang, "audioError");
     if (sse) {
       emit({ type: "error", message });
       res.end();
@@ -319,10 +395,18 @@ app.post("/api/audio", async (req, res) => {
   }
 });
 
-app.get("/d/:id", async (req, res) => {
-  const record = await resolveFile(req.params.id);
+app.get("/d/:file", async (req, res) => {
+  const match = String(req.params.file || "").match(
+    /^([A-Za-z0-9]{6,10})(?:\.(mp4|mp3))?$/i
+  );
+  const lang = pickLang(req.headers["accept-language"]);
+  if (!match) {
+    res.status(404).type("text/plain").send(t(lang, "notFound"));
+    return;
+  }
+  const record = await resolveFile(match[1]);
   if (!record) {
-    res.status(404).type("text/plain").send("Archivo no encontrado o expirado.");
+    res.status(404).type("text/plain").send(t(lang, "notFound"));
     return;
   }
   res.setHeader("Content-Type", record.mime);

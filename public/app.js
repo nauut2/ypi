@@ -1,8 +1,104 @@
-/* YPi · descargador de YouTube */
+/* YPi · descargador de YouTube (es/en) */
 (() => {
   "use strict";
 
   const $ = (id) => document.getElementById(id);
+
+  // diccionario de textos: es por defecto, en traducido
+  const I18N = {
+    es: {
+      online: "En línea",
+      theme: "Tema",
+      kicker: "YouTube Downloader · 100% Gratis",
+      heroTitle1: "Descarga videos y",
+      heroTitle2: "audio",
+      heroTitle3: "de YouTube",
+      heroSub:
+        "Pega un enlace, elige el formato y recibe un enlace directo al archivo. Sin registros, sin anuncios, sin complicaciones.",
+      downloadTitle: "Descargar",
+      downloadSub: "Pega el enlace de YouTube — video, Short o enlace compartido.",
+      downloadBtn: "Descargar",
+      video: "Video",
+      audio: "Audio",
+      quality: "Calidad",
+      processing: "Procesando…",
+      copy: "Copiar",
+      downloadFile: "Descargar archivo",
+      step1Title: "Pega el enlace",
+      step1Text: "Copia cualquier URL de YouTube — videos, Shorts o enlaces compartidos.",
+      step2Title: "Elige el formato",
+      step2Text: "Video MP4 hasta 1080p con audio, o audio MP3 hasta 320 kbps.",
+      step3Title: "Obtén tu enlace",
+      step3Text: "El archivo se guarda en el servidor y recibes un enlace directo y corto.",
+      // dinámicos
+      noUrl: "Pega primero un enlace de YouTube.",
+      badUrl: "El enlace no parece ser de YouTube.",
+      serverError: "Error inesperado del servidor.",
+      connectionClosed: "La conexión con el servidor se cerró antes de terminar.",
+      failed: "No se pudo completar la descarga.",
+      duration: "Duración",
+      thumbAlt: "Miniatura del video",
+      ready: "Descarga lista",
+      expiresMin: "expira en {n} min",
+      expiresHour: "expira en {n} h",
+      hint: "El enlace {expiry} · se guardó localmente en el servidor",
+      doneToast: "Listo. Descarga tu archivo.",
+      copied: "Enlace copiado al portapapeles.",
+      copiedShort: "Enlace copiado.",
+      preparingVideo: "Preparando MP4 {q}p…",
+      preparingAudio: "Preparando MP3 {q} kbps…",
+      converting: "Convirtiendo…",
+      downloading: "Descargando…",
+      metaTitle: "YPi · Descargador de YouTube",
+      metaDesc: "YPi — descarga videos MP4 y audio MP3 de YouTube al instante. Minimalista, rápido y sin registros.",
+    },
+    en: {
+      online: "Online",
+      theme: "Theme",
+      kicker: "YouTube Downloader · 100% Free",
+      heroTitle1: "Download videos and",
+      heroTitle2: "audio",
+      heroTitle3: "from YouTube",
+      heroSub:
+        "Paste a link, choose the format and get a direct link to the file. No sign-ups, no ads, no hassle.",
+      downloadTitle: "Download",
+      downloadSub: "Paste a YouTube link — video, Short or shared link.",
+      downloadBtn: "Download",
+      video: "Video",
+      audio: "Audio",
+      quality: "Quality",
+      processing: "Processing…",
+      copy: "Copy",
+      downloadFile: "Download file",
+      step1Title: "Paste the link",
+      step1Text: "Copy any YouTube URL — videos, Shorts or shared links.",
+      step2Title: "Pick the format",
+      step2Text: "MP4 video up to 1080p with audio, or MP3 audio up to 320 kbps.",
+      step3Title: "Get your link",
+      step3Text: "The file is saved on the server and you get a short direct link.",
+      // dynamic
+      noUrl: "Paste a YouTube link first.",
+      badUrl: "That doesn't look like a YouTube link.",
+      serverError: "Unexpected server error.",
+      connectionClosed: "The connection to the server closed before finishing.",
+      failed: "The download could not be completed.",
+      duration: "Duration",
+      thumbAlt: "Video thumbnail",
+      ready: "Download ready",
+      expiresMin: "expires in {n} min",
+      expiresHour: "expires in {n} h",
+      hint: "The link {expiry} · saved locally on the server",
+      doneToast: "Done. Download your file.",
+      copied: "Link copied to clipboard.",
+      copiedShort: "Link copied.",
+      preparingVideo: "Preparing MP4 {q}p…",
+      preparingAudio: "Preparing MP3 {q} kbps…",
+      converting: "Converting…",
+      downloading: "Downloading…",
+      metaTitle: "YPi · YouTube Downloader",
+      metaDesc: "YPi — download MP4 videos and MP3 audio from YouTube instantly. Minimalist, fast and no sign-up.",
+    },
+  };
 
   const urlInput = $("url");
   const goBtn = $("go");
@@ -20,6 +116,61 @@
 
   let mode = "video";
   let quality = 360;
+  let lang = "es";
+
+  // idioma: lo que guardó el usuario o el del navegador
+  try {
+    lang =
+      localStorage.getItem("ypi-lang") ||
+      (navigator.language || "es").toLowerCase().startsWith("en")
+        ? "en"
+        : "es";
+  } catch {
+    lang = "es";
+  }
+
+  function t(key, vars = {}) {
+    const text = (I18N[lang] && I18N[lang][key]) || I18N.es[key] || key;
+    return text.replace(/\{(\w+)\}/g, (_, name) => String(vars[name] ?? `{${name}}`));
+  }
+
+  function applyLang() {
+    document.documentElement.lang = lang;
+    document.title = t("metaTitle");
+    document
+      .querySelector('meta[name="description"]')
+      .setAttribute("content", t("metaDesc"));
+    document.querySelectorAll("[data-i18n]").forEach((el) => {
+      el.textContent = t(el.dataset.i18n);
+    });
+    const esBtn = $("langEs");
+    const enBtn = $("langEn");
+    esBtn.classList.toggle("active", lang === "es");
+    enBtn.classList.toggle("active", lang === "en");
+    esBtn.setAttribute("aria-pressed", String(lang === "es"));
+    enBtn.setAttribute("aria-pressed", String(lang === "en"));
+    // re-render dinámicos visibles (resultado)
+    if (!result.hidden) {
+      renderResult(lastResult);
+    }
+    if (!progress.hidden) {
+      updateProgressText();
+    }
+  }
+
+  $("langEs").addEventListener("click", () => setLang("es"));
+  $("langEn").addEventListener("click", () => setLang("en"));
+
+  function setLang(next) {
+    if (lang === next) return;
+    lang = next;
+    try {
+      localStorage.setItem("ypi-lang", lang);
+    } catch {
+      /* sin almacenamiento */
+    }
+    applyLang();
+  }
 
   // tema: por defecto el del sistema, después lo que guardó el usuario
   const themeBtn = $("themeToggle");
@@ -157,19 +308,39 @@
     progressPct.textContent = `${clamped}%`;
   }
 
+  let lastProgressStage = "download";
+  let lastProgressPercent = 0;
+  let lastStageLabel = "";
+
+  function updateProgressText() {
+    if (lastProgressPercent >= 0) {
+      progressText.textContent =
+        lastProgressStage === "convert"
+          ? `${t("converting")} ${Math.round(lastProgressPercent)}%`
+          : `${t("downloading")} ${Math.round(lastProgressPercent)}%`;
+    } else if (lastStageLabel) {
+      progressText.textContent = lastStageLabel;
+    } else {
+      progressText.textContent = t("processing");
+    }
+  }
+
   function handleProgressEvent(event) {
     if (event.type === "stage") {
-      progressText.textContent = event.label || "Procesando…";
+      lastStageLabel = event.label || "";
+      lastProgressPercent = -1;
+      progressText.textContent = lastStageLabel || t("processing");
     } else if (event.type === "progress") {
       const percent = Number(event.percent);
       if (Number.isFinite(percent) && percent >= 0) {
+        lastProgressPercent = percent;
+        lastProgressStage = event.stage === "convert" ? "convert" : "download";
         setProgress(percent);
-        progressText.textContent =
-          event.stage === "convert"
-            ? `Convirtiendo… ${Math.round(percent)}%`
-            : `Descargando… ${Math.round(percent)}%`;
+        updateProgressText();
       } else {
-        progressText.textContent = event.label || "Descargando…";
+        lastProgressPercent = -1;
+        lastStageLabel = event.label || "";
+        progressText.textContent = lastStageLabel || t("downloading");
       }
     }
   }
@@ -177,12 +348,12 @@
   async function download() {
     const url = urlInput.value.trim();
     if (!url) {
-      toast("Pega primero un enlace de YouTube.", "err");
+      toast(t("noUrl"), "err");
       urlInput.focus();
       return;
     }
     if (!extractHint(url)) {
-      toast("El enlace no parece ser de YouTube.", "err");
+      toast(t("badUrl"), "err");
       urlInput.focus();
       return;
     }
@@ -191,11 +362,13 @@
     urlInput.disabled = true;
     result.hidden = true;
     progress.hidden = false;
+    lastProgressPercent = -1;
+    lastStageLabel = "";
     setProgress(0);
     progressText.textContent =
       mode === "video"
-        ? `Preparando MP4 ${quality}p…`
-        : `Preparando MP3 ${quality} kbps…`;
+        ? t("preparingVideo", { q: quality })
+        : t("preparingAudio", { q: quality });
 
     try {
       const res = await fetch(`/api/${mode}`, {
@@ -204,7 +377,7 @@
           "Content-Type": "application/json",
           Accept: "text/event-stream",
         },
-        body: JSON.stringify({ url, quality }),
+        body: JSON.stringify({ url, quality, lang }),
       });
 
       const contentType = res.headers.get("content-type") || "";
@@ -213,7 +386,7 @@
       if (!contentType.includes("text/event-stream")) {
         const json = await res.json().catch(() => null);
         if (!res.ok || !json?.ok) {
-          throw new Error(json?.error || "Error inesperado del servidor.");
+          throw new Error(json?.error || t("serverError"));
         }
         showResult(json.data);
         return;
@@ -250,26 +423,29 @@
             showResult(event.data);
             done = true;
           } else if (event.type === "error") {
-            failure = event.message || "Error inesperado del servidor.";
+            failure = event.message || t("serverError");
           }
         }
         if (done || failure) break;
       }
       if (failure) throw new Error(failure);
-      if (!done)
-        throw new Error("La conexión con el servidor se cerró antes de terminar.");
+      if (!done) throw new Error(t("connectionClosed"));
     } catch (error) {
-      toast(error.message || "No se pudo completar la descarga.", "err");
+      toast(error.message || t("failed"), "err");
     } finally {
       goBtn.disabled = false;
       urlInput.disabled = false;
       progress.hidden = true;
       progressFill.style.width = "0%";
       progressPct.textContent = "0%";
+      lastProgressPercent = -1;
+      lastStageLabel = "";
     }
   }
 
-  function showResult(data) {
+  let lastResult = null;
+
+  function renderResult(data) {
     const thumb = $("rThumb");
     const title = $("rTitle");
     const meta = $("rMeta");
@@ -278,7 +454,7 @@
     const hint = $("rHint");
 
     if (data.miniatura) {
-      thumb.alt = data.titulo || "Miniatura";
+      thumb.alt = data.titulo || t("thumbAlt");
       thumb.style.display = "block";
       thumb.onerror = () => {
         // maxresdefault no siempre existe; caemos a hqdefault
@@ -295,7 +471,7 @@
       thumb.style.display = "none";
     }
 
-    title.textContent = data.titulo || "Descarga lista";
+    title.textContent = data.titulo || t("ready");
 
     meta.innerHTML = "";
     if (data.duracion) {
@@ -303,7 +479,7 @@
       icon.className = "bi bi-clock";
       meta.appendChild(icon);
       meta.appendChild(
-        document.createTextNode(`Duración ${formatDuration(data.duracion)}`)
+        document.createTextNode(`${t("duration")} ${formatDuration(data.duracion)}`)
       );
     }
 
@@ -326,27 +502,32 @@
     $("rDownload").href = data.downloadUrl;
 
     const seconds = data.expiraEn || 180;
+    const mins = Math.max(1, Math.round(seconds / 60));
     const expiry =
       seconds < 3600
-        ? `expira en ${Math.max(1, Math.round(seconds / 60))} min`
-        : `expira en ${Math.round(seconds / 3600)} h`;
-    hint.textContent = `El enlace ${expiry} · se guardó localmente en el servidor`;
+        ? t("expiresMin", { n: mins })
+        : t("expiresHour", { n: Math.round(seconds / 3600) });
+    hint.textContent = t("hint", { expiry });
+  }
 
+  function showResult(data) {
+    lastResult = data;
+    renderResult(data);
     result.hidden = false;
     result.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    toast("Listo. Descarga tu archivo.");
+    toast(t("doneToast"));
   }
 
   $("rCopy").addEventListener("click", async () => {
     const link = $("rLink");
     try {
       await navigator.clipboard.writeText(link.value);
-      toast("Enlace copiado al portapapeles.");
+      toast(t("copied"));
     } catch {
       link.select();
       link.setSelectionRange(0, link.value.length);
       document.execCommand("copy");
-      toast("Enlace copiado.");
+      toast(t("copiedShort"));
     }
   });
 
@@ -364,5 +545,6 @@
     }, 0);
   });
 
+  applyLang();
   setMode("video");
 })();

@@ -275,6 +275,46 @@ html.light .app-header {
   animation: pulse 2.4s ease-in-out infinite;
 }
 
+/* Interruptor de idioma ES/EN */
+
+.lang-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  height: 38px;
+  box-sizing: border-box;
+}
+
+.lang-btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 5px 9px;
+  border-radius: 0.45rem;
+  cursor: pointer;
+  line-height: 1;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.lang-btn:hover {
+  color: var(--text);
+}
+
+.lang-btn.active {
+  background: var(--accent);
+  color: var(--accent-text);
+  box-shadow: var(--shadow);
+}
+
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
@@ -1052,6 +1092,14 @@ html.light .feature-icon {
 
   .theme-label {
     display: none;
+  }
+
+  .lang-switch {
+    height: 36px;
+  }
+
+  .lang-btn {
+    padding: 4px 7px;
   }
 
   .hero {

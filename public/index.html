@@ -54,11 +54,15 @@
           <i class="bi bi-github" aria-hidden="true"></i><span>GitHub</span>
         </a>
         <span class="status-chip">
-          <i class="bi bi-circle-fill dot" aria-hidden="true"></i> En línea
+          <i class="bi bi-circle-fill dot" aria-hidden="true"></i> <span data-i18n="online">En línea</span>
         </span>
+        <div class="lang-switch" role="group" aria-label="Idioma / Language">
+          <button id="langEs" class="lang-btn active" type="button" data-lang="es" aria-pressed="true">ES</button>
+          <button id="langEn" class="lang-btn" type="button" data-lang="en" aria-pressed="false">EN</button>
+        </div>
         <button id="themeToggle" class="icon-btn" type="button" aria-label="Cambiar tema">
           <i class="bi bi-moon-stars" aria-hidden="true"></i>
-          <span class="theme-label">Tema</span>
+          <span class="theme-label" data-i18n="theme">Tema</span>
         </button>
       </nav>
     </div>
@@ -68,9 +72,9 @@
 
     <!-- Hero -->
     <section class="hero">
-      <p class="kicker">YouTube Downloader · 100% Gratis</p>
-      <h1>Descarga videos y <span class="outline">audio</span><br />de YouTube</h1>
-      <p class="sub">
+      <p class="kicker" data-i18n="kicker">YouTube Downloader · 100% Gratis</p>
+      <h1><span data-i18n="heroTitle1">Descarga videos y</span> <span class="outline" data-i18n="heroTitle2">audio</span><br /><span data-i18n="heroTitle3">de YouTube</span></h1>
+      <p class="sub" data-i18n="heroSub">
         Pega un enlace, elige el formato y recibe un enlace directo al archivo.
         Sin registros, sin anuncios, sin complicaciones.
       </p>
@@ -79,8 +83,8 @@
     <!-- Panel de descarga -->
     <section class="panel download-panel" aria-label="Descargador">
       <div class="panel-head">
-        <h2><i class="bi bi-youtube" aria-hidden="true"></i> Descargar</h2>
-        <p>Pega el enlace de YouTube — video, Short o enlace compartido.</p>
+        <h2><i class="bi bi-youtube" aria-hidden="true"></i> <span data-i18n="downloadTitle">Descargar</span></h2>
+        <p data-i18n="downloadSub">Pega el enlace de YouTube — video, Short o enlace compartido.</p>
       </div>
 
       <div class="url-row">
@@ -98,31 +102,31 @@
         </div>
         <button id="go" class="btn btn-primary" type="button">
           <i class="bi bi-download" aria-hidden="true"></i>
-          <span>Descargar</span>
+          <span data-i18n="downloadBtn">Descargar</span>
         </button>
       </div>
 
       <div class="options">
         <div class="seg" role="tablist" aria-label="Formato">
           <button class="seg-btn active" role="tab" data-mode="video" type="button">
-            <i class="bi bi-film" aria-hidden="true"></i> Video
+            <i class="bi bi-film" aria-hidden="true"></i> <span data-i18n="video">Video</span>
             <em>MP4</em>
           </button>
           <button class="seg-btn" role="tab" data-mode="audio" type="button">
-            <i class="bi bi-file-earmark-music" aria-hidden="true"></i> Audio
+            <i class="bi bi-file-earmark-music" aria-hidden="true"></i> <span data-i18n="audio">Audio</span>
             <em>MP3</em>
           </button>
         </div>
 
         <div class="quality" id="qualityWrap">
-          <span class="q-label">Calidad</span>
+          <span class="q-label" data-i18n="quality">Calidad</span>
           <div class="pills" id="qualityPills" role="group" aria-label="Calidad"></div>
         </div>
       </div>
 
       <div class="progress" id="progress" hidden>
         <span class="spinner" aria-hidden="true"></span>
-        <span id="progressText" class="progress-label">Procesando…</span>
+        <span id="progressText" class="progress-label" data-i18n="processing">Procesando…</span>
         <div class="progress-track" aria-hidden="true">
           <div class="progress-fill" id="progressFill"></div>
         </div>
@@ -152,12 +156,12 @@
               />
             </div>
             <button id="rCopy" class="btn btn-ghost" type="button" title="Copiar enlace">
-              <i class="bi bi-clipboard" aria-hidden="true"></i><span>Copiar</span>
+              <i class="bi bi-clipboard" aria-hidden="true"></i><span data-i18n="copy">Copiar</span>
             </button>
           </div>
           <a id="rDownload" class="btn btn-primary btn-block" href="#" download>
             <i class="bi bi-box-arrow-down" aria-hidden="true"></i>
-            <span>Descargar archivo</span>
+            <span data-i18n="downloadFile">Descargar archivo</span>
           </a>
           <p class="r-hint" id="rHint"></p>
         </div>
@@ -168,18 +172,18 @@
     <section class="features" aria-label="Cómo funciona">
       <div class="feature">
         <span class="feature-icon"><i class="bi bi-pencil-square" aria-hidden="true"></i></span>
-        <h3>Pega el enlace</h3>
-        <p>Copia cualquier URL de YouTube — videos, Shorts o enlaces compartidos.</p>
+        <h3 data-i18n="step1Title">Pega el enlace</h3>
+        <p data-i18n="step1Text">Copia cualquier URL de YouTube — videos, Shorts o enlaces compartidos.</p>
       </div>
       <div class="feature">
         <span class="feature-icon"><i class="bi bi-sliders" aria-hidden="true"></i></span>
-        <h3>Elige el formato</h3>
-        <p>Video MP4 hasta 1080p con audio, o audio MP3 hasta 320 kbps.</p>
+        <h3 data-i18n="step2Title">Elige el formato</h3>
+        <p data-i18n="step2Text">Video MP4 hasta 1080p con audio, o audio MP3 hasta 320 kbps.</p>
       </div>
       <div class="feature">
         <span class="feature-icon"><i class="bi bi-link-45deg" aria-hidden="true"></i></span>
-        <h3>Obtén tu enlace</h3>
-        <p>El archivo se guarda en el servidor y recibes un enlace directo y corto.</p>
+        <h3 data-i18n="step3Title">Obtén tu enlace</h3>
+        <p data-i18n="step3Text">El archivo se guarda en el servidor y recibes un enlace directo y corto.</p>
       </div>
     </section>
   </main>
