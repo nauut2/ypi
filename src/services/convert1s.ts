@@ -89,7 +89,8 @@ export async function ytmp4(
   url: string,
   quality: number,
   signal?: AbortSignal,
-  exact = false
+  exact = false,
+  onProgress?: (percent: number) => void
 ): Promise<VideoResult> {
   const copyright = await getJson(
     `https://dmca.ytmp3.gg/api/check?url=${encodeURIComponent(url)}`,
@@ -126,6 +127,19 @@ export async function ytmp4(
 
   for (let attempt = 0; attempt < 120; attempt++) {
     const result = await getJson(conversion.statusUrl, { signal });
+
+    if (onProgress) {
+      const percent = Number(
+        result.progress ??
+          result.percent ??
+          result.progressPercent ??
+          result.percentage ??
+          0
+      );
+      if (Number.isFinite(percent) && percent > 0 && percent < 100) {
+        onProgress(percent);
+      }
+    }
 
     if (result.status === "completed" && result.downloadUrl) {
       const file = await inspectMp4Url(result.downloadUrl, {

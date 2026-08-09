@@ -121,7 +121,11 @@
 
       <div class="progress" id="progress" hidden>
         <span class="spinner" aria-hidden="true"></span>
-        <span id="progressText">Procesando…</span>
+        <span id="progressText" class="progress-label">Procesando…</span>
+        <div class="progress-track" aria-hidden="true">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <span class="progress-pct" id="progressPct">0%</span>
       </div>
     </section>
 
@@ -180,8 +184,7 @@
   </main>
 
   <footer class="site-footer">
-    <p>Hecho con <span class="heart" aria-hidden="true">♥</span> por <strong>Naut</strong></p>
-    <p class="footer-sub">YPi · los archivos expiran automáticamente a las 24 horas</p>
+    <p>© YPI 2026 (Naut)</p>
   </footer>
 
   <div class="toasts" id="toasts" aria-live="polite"></div>

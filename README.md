@@ -4,7 +4,7 @@
 <img src="https://i.ibb.co/hRmc03Sd/2D.jpg" width="120px" alt="Logo YPi">
 </p>
 
-> Descargador de **YouTube** minimalista, moderno y responsive: descarga el video en **MP4 360p** o el audio en **MP3** y obtén un **enlace directo corto** al archivo guardado en el servidor.
+> Descargador de **YouTube** minimalista, moderno y responsive: descarga el video en **MP4 (360p/720p/1080p)** o el audio en **MP3** y obtén un **enlace directo corto** al archivo guardado en el servidor.
 
 <p align="center">
 <img src="https://img.shields.io/badge/Status-Activo-22c55e?style=flat" alt="Status">
@@ -21,18 +21,19 @@
 </p>
 
 > [!NOTE]
-> **YPi** está pensado para ofrecer una experiencia limpia y sin fricción: pegas un enlace, eliges formato y recibes un enlace directo. Los archivos se guardan localmente y **expiran automáticamente a las 24 horas**.
+> **YPi** está pensado para ofrecer una experiencia limpia y sin fricción: pegas un enlace, eliges formato y recibes un enlace directo. Los archivos se guardan localmente y **expiran automáticamente a los 3 minutos** (suficiente para descargar y limpiar el servidor).
 
 ---
 
 ## 🎬 Descripción
 
-**YPi** es una página web de descarga de YouTube con un backend en **TypeScript** que integra dos motores de descarga:
+**YPi** es una página web de descarga de YouTube con un backend en **TypeScript** que integra varios motores de descarga:
 
-- **Video MP4 360p con audio** — vía la API *player* de YouTube (cliente Android / innertube).
+- **Video MP4 (360p, 720p y 1080p)** — vía **SaveTube** (save-tube.com) con respaldo automático en **Convert1s**.
 - **Audio MP3 (96, 128, 256 y 320 kbps)** — vía *CnvMP3* con proxy de descarga.
+- **Detalles del video** (título, canal y miniatura) — vía el **oEmbed** oficial de YouTube.
 
-Al solicitar una descarga, el servidor **descarga el buffer del archivo, lo guarda localmente** y genera un **enlace corto** (`/d/AbC123xY`) que detecta automáticamente el dominio actual para que siempre funcione.
+Al solicitar una descarga, el servidor **descarga el buffer del archivo, lo guarda localmente** y genera un **enlace corto** (`/d/AbC123xY`) que detecta automáticamente el dominio actual para que siempre funcione. La interfaz muestra el **porcentaje real de descarga** en tiempo real.
 
 ## 🍡 Requisitos
 
@@ -94,14 +95,14 @@ bun start
 ### Desde la web
 
 1. Pega el enlace de YouTube (video, Short o `youtu.be`).
-2. Elige **Video 360p · MP4** o **Audio · MP3** (y la calidad).
-3. Pulsa **Descargar** y recibe tu enlace directo + botón de descarga.
+2. Elige **Video · MP4** (360p/720p/1080p) o **Audio · MP3** (96/128/256/320 kbps).
+3. Pulsa **Descargar** y sigue el **progreso real** hasta recibir tu enlace directo.
 
 ### API
 
 | Endpoint | Método | Descripción |
 |---|---|---|
-| `/api/video` | `POST` | `{ "url": "…" }` → video MP4 360p |
+| `/api/video` | `POST` | `{ "url": "…", "quality": 360 \| 720 \| 1080 }` → video MP4 (SSE con progreso) |
 | `/api/audio` | `POST` | `{ "url": "…", "quality": 128 }` → audio MP3 (96/128/256/320) |
 | `/d/:id` | `GET` | Descarga directa del archivo guardado |
 | `/health` | `GET` | Estado del servicio |
@@ -139,12 +140,14 @@ ypi/
 │   ├── styles.css
 │   └── app.js
 ├── src/                    # Backend TypeScript
-│   ├── index.ts            # Servidor Express + rutas API + enlace corto
+│   ├── index.ts            # Servidor Express + rutas API + enlace corto + progreso SSE
 │   ├── utils.ts            # withTimeout, extractVideoId, inspectMp4Url (parser MP4)
-│   ├── storage.ts          # Guardado local, IDs cortos, expiración 24 h
+│   ├── storage.ts          # Guardado local, IDs cortos, expiración 3 min
 │   └── services/
-│       ├── youtube.ts      # Video MP4 360p (innertube / cliente Android)
-│       └── cnvmp3.ts       # Audio MP3 (caché + conversión)
+│       ├── savetube.ts     # Video MP4 (save-tube.com, info cifrado AES)
+│       ├── convert1s.ts    # Video MP4 (Convert1s, respaldo)
+│       ├── cnvmp3.ts       # Audio MP3 (caché + conversión)
+│       └── oembed.ts       # Detalles del video vía oEmbed de YouTube
 ├── downloads/              # Archivos descargados (se limpian solos)
 ├── package.json
 └── tsconfig.json

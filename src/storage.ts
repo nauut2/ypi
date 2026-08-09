@@ -8,7 +8,7 @@ import { fetch } from "undici";
 import { DESKTOP_UA, dispatcher } from "./utils";
 
 const DIR = path.join(process.cwd(), "downloads");
-const TTL_MS = 24 * 60 * 60 * 1000; // 24 horas
+const TTL_MS = 3 * 60 * 1000; // 3 minutos
 const MAX_BYTES = 1500 * 1024 * 1024; // 1.5 GB
 const ALPHABET =
   "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
@@ -35,10 +35,12 @@ async function ensureDir(): Promise<void> {
   await mkdir(DIR, { recursive: true });
 }
 
-/** Descarga un stream web (undici) a disco con límite de tamaño. */
+/** Descarga un stream web (undici) a disco con límite de tamaño y progreso. */
 async function streamWebToDisk(
   body: ReadableStream<Uint8Array>,
-  filePath: string
+  filePath: string,
+  onProgress?: (written: number, total: number) => void,
+  total = 0
 ): Promise<number> {
   let written = 0;
   const sink = createWriteStream(filePath);
@@ -51,6 +53,7 @@ async function streamWebToDisk(
       if (!sink.write(chunk)) {
         await new Promise<void>((resolve) => sink.once("drain", resolve));
       }
+      onProgress?.(written, total);
     }
     await new Promise<void>((resolve, reject) => {
       sink.end((err?: Error | null) => (err ? reject(err) : resolve()));
@@ -62,10 +65,12 @@ async function streamWebToDisk(
   return written;
 }
 
-/** Descarga un stream de Node (axios) a disco con límite de tamaño. */
+/** Descarga un stream de Node (axios) a disco con límite de tamaño y progreso. */
 async function streamNodeToDisk(
   stream: NodeJS.ReadableStream,
-  filePath: string
+  filePath: string,
+  onProgress?: (written: number, total: number) => void,
+  total = 0
 ): Promise<number> {
   let written = 0;
   const sink = createWriteStream(filePath);
@@ -76,6 +81,7 @@ async function streamNodeToDisk(
       source.destroy();
       sink.destroy(new Error("El archivo supera el límite de 1.5 GB."));
     }
+    onProgress?.(written, total);
   });
   await pipeline(source, sink);
   return written;
@@ -92,7 +98,8 @@ export interface SaveOptions {
 /** Guarda un video descargado vía undici (web stream). */
 export async function saveVideoBuffer(
   url: string,
-  opts: SaveOptions
+  opts: SaveOptions,
+  onProgress?: (written: number, total: number) => void
 ): Promise<StoredFile> {
   await ensureDir();
   const response = await fetch(url, {
@@ -107,10 +114,11 @@ export async function saveVideoBuffer(
   if (!response.ok || !response.body) {
     throw new Error(`No se pudo descargar el video (HTTP ${response.status}).`);
   }
+  const total = Number(response.headers.get("content-length") || 0);
   const id = generateId();
   const tmpPath = path.join(DIR, `.${id}.part`);
   const filePath = path.join(DIR, `${id}.${opts.ext}`);
-  const size = await streamWebToDisk(response.body, tmpPath);
+  const size = await streamWebToDisk(response.body, tmpPath, onProgress, total);
   await rename(tmpPath, filePath);
   return finalize(id, filePath, opts, size);
 }
@@ -118,13 +126,17 @@ export async function saveVideoBuffer(
 /** Guarda un audio descargado vía axios (stream de Node). */
 export async function saveAudioBuffer(
   stream: NodeJS.ReadableStream,
-  opts: SaveOptions
+  opts: SaveOptions,
+  onProgress?: (written: number, total: number) => void
 ): Promise<StoredFile> {
   await ensureDir();
+  const total = Number(
+    (stream as any)?.headers?.["content-length"] || 0
+  );
   const id = generateId();
   const tmpPath = path.join(DIR, `.${id}.part`);
   const filePath = path.join(DIR, `${id}.${opts.ext}`);
-  const size = await streamNodeToDisk(stream, tmpPath);
+  const size = await streamNodeToDisk(stream, tmpPath, onProgress, total);
   await rename(tmpPath, filePath);
   return finalize(id, filePath, opts, size);
 }

@@ -11,6 +11,8 @@
   const qualityWrap = $("qualityWrap");
   const progress = $("progress");
   const progressText = $("progressText");
+  const progressFill = $("progressFill");
+  const progressPct = $("progressPct");
   const result = $("result");
   const toasts = $("toasts");
 
@@ -154,6 +156,32 @@
     return patterns.some((p) => p.test(input.trim()));
   }
 
+  /* ---------- Progreso ---------- */
+
+  function setProgress(percent) {
+    if (percent == null) return;
+    const clamped = Math.max(0, Math.min(100, Math.round(percent)));
+    progressFill.style.width = `${clamped}%`;
+    progressPct.textContent = `${clamped}%`;
+  }
+
+  function handleProgressEvent(event) {
+    if (event.type === "stage") {
+      progressText.textContent = event.label || "Procesando…";
+    } else if (event.type === "progress") {
+      const percent = Number(event.percent);
+      if (Number.isFinite(percent) && percent >= 0) {
+        setProgress(percent);
+        progressText.textContent =
+          event.stage === "convert"
+            ? `Convirtiendo… ${Math.round(percent)}%`
+            : `Descargando… ${Math.round(percent)}%`;
+      } else {
+        progressText.textContent = event.label || "Descargando…";
+      }
+    }
+  }
+
   /* ---------- Descarga ---------- */
 
   async function download() {
@@ -173,31 +201,80 @@
     urlInput.disabled = true;
     result.hidden = true;
     progress.hidden = false;
+    setProgress(0);
     progressText.textContent =
       mode === "video"
-        ? `Convirtiendo a MP4 ${quality}p… puede tardar hasta un minuto.`
-        : `Convirtiendo a MP3 ${quality} kbps… puede tardar unos segundos.`;
+        ? `Preparando MP4 ${quality}p…`
+        : `Preparando MP3 ${quality} kbps…`;
 
     try {
       const res = await fetch(`/api/${mode}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "text/event-stream",
+        },
         body: JSON.stringify({ url, quality }),
       });
 
-      const json = await res.json().catch(() => null);
+      const contentType = res.headers.get("content-type") || "";
 
-      if (!res.ok || !json?.ok) {
-        throw new Error(json?.error || "Error inesperado del servidor.");
+      // Respuesta normal (errores 400/429) → JSON directo.
+      if (!contentType.includes("text/event-stream")) {
+        const json = await res.json().catch(() => null);
+        if (!res.ok || !json?.ok) {
+          throw new Error(json?.error || "Error inesperado del servidor.");
+        }
+        showResult(json.data);
+        return;
       }
 
-      showResult(json.data);
+      // Stream de eventos (progreso real).
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let failure = null;
+      let done = false;
+
+      while (true) {
+        const { done: streamDone, value } = await reader.read();
+        if (streamDone) break;
+        buffer += decoder.decode(value, { stream: true });
+        let index;
+        while ((index = buffer.indexOf("\n\n")) !== -1) {
+          const chunk = buffer.slice(0, index);
+          buffer = buffer.slice(index + 2);
+          const line = chunk
+            .split("\n")
+            .find((l) => l.startsWith("data: "));
+          if (!line) continue;
+          let event;
+          try {
+            event = JSON.parse(line.slice(6));
+          } catch {
+            continue;
+          }
+          if (event.type === "progress" || event.type === "stage") {
+            handleProgressEvent(event);
+          } else if (event.type === "done") {
+            showResult(event.data);
+            done = true;
+          } else if (event.type === "error") {
+            failure = event.message || "Error inesperado del servidor.";
+          }
+        }
+        if (done || failure) break;
+      }
+      if (failure) throw new Error(failure);
+      if (!done) throw new Error("La conexión con el servidor se cerró antes de terminar.");
     } catch (error) {
       toast(error.message || "No se pudo completar la descarga.", "err");
     } finally {
       goBtn.disabled = false;
       urlInput.disabled = false;
       progress.hidden = true;
+      progressFill.style.width = "0%";
+      progressPct.textContent = "0%";
     }
   }
 
@@ -259,8 +336,12 @@
     link.value = data.downloadUrl;
     $("rDownload").href = data.downloadUrl;
 
-    const hours = Math.max(1, Math.round((data.expiraEn || 86400) / 3600));
-    hint.textContent = `El enlace expira en ${hours} h · se guardó localmente en el servidor`;
+    const seconds = data.expiraEn || 180;
+    const expiry =
+      seconds < 3600
+        ? `expira en ${Math.max(1, Math.round(seconds / 60))} min`
+        : `expira en ${Math.round(seconds / 3600)} h`;
+    hint.textContent = `El enlace ${expiry} · se guardó localmente en el servidor`;
 
     result.hidden = false;
     result.scrollIntoView({ behavior: "smooth", block: "nearest" });
