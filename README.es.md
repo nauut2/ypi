@@ -1,7 +1,7 @@
 # YPi 🌿
 
 <p align="center">
-<img src="https://i.ibb.co/hRmc03Sd/2D.jpg" width="120px" alt="Logo YPi">
+<img src="./public/logo.svg" width="120px" alt="Logo YPi">
 </p>
 
 > Descargador de **YouTube** minimalista, moderno y responsive: descarga el video en **MP4 (360p/480p/720p/1080p)** o el audio en **MP3** y obtén un **enlace directo corto** al archivo guardado en el servidor.

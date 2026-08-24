@@ -9,11 +9,15 @@ import {
   saveAudioBuffer,
   saveVideoBuffer,
 } from "./storage";
-import { ytmp3 as cnvmp3Audio, AudioQuality } from "./services/cnvmp3";
 import {
-  ytmp4 as convert1sVideo,
-  ytmp3 as convert1sAudio,
-} from "./services/convert1s";
+  ytmp3 as cnvmp3Audio,
+  ytmp4 as cnvmp3Video,
+  AudioQuality,
+} from "./services/cnvmp3";
+import {
+  ytmp3 as y2mateAudio,
+  ytmp4 as y2mateVideo,
+} from "./services/y2mate";
 import { ytmp4 as androidVideo } from "./services/android";
 import { ytmp3 as yt2songAudio } from "./services/yt2song";
 import { fetchVideoDetails } from "./services/oembed";
@@ -139,6 +143,8 @@ function makeProgress(emit: EmitFn) {
 interface VideoInfo {
   url: string;
   referer: string;
+  /** Cabeceras necesarias para recuperar URLs firmadas de algunos proveedores. */
+  headers?: Record<string, string>;
   calidad: string;
   titulo: string | null;
   duracion: number;
@@ -148,6 +154,8 @@ interface AudioInfo {
   url?: string;
   archivo: string;
   referer: string;
+  /** Cabeceras necesarias para recuperar URLs firmadas de algunos proveedores. */
+  headers?: Record<string, string>;
   calidad?: string;
   stream?: NodeJS.ReadableStream;
 }
@@ -185,11 +193,11 @@ async function fetchVideo(
   emit({ type: "stage", label: t(lang, "stageSearch") });
   return await raceScrapers<VideoInfo>(
     [
+      // Y2Mate/cnv.cx y cnvmp3 devuelven enlaces firmados que se validan
+      // antes de entrar a la carrera; así no bloquean una descarga con un 200 HTML.
+      (signal) => y2mateVideo(videoId, quality, signal),
+      (signal) => cnvmp3Video(videoId, quality, signal),
       (signal) => savetubeVideo(fullUrl, quality, signal),
-      (signal) =>
-        convert1sVideo(fullUrl, quality, signal, true, (pct) =>
-          emit({ type: "progress", stage: "convert", percent: pct })
-        ),
       (signal) => androidVideo(videoId, quality, signal),
     ],
     lang
@@ -253,7 +261,11 @@ app.post("/api/video", async (req, res) => {
         filename: `${name}.mp4`,
         mime: "video/mp4",
         ext: "mp4",
-        headers: { Referer: info.referer, "User-Agent": DESKTOP_UA },
+        headers: {
+          Referer: info.referer,
+          "User-Agent": DESKTOP_UA,
+          ...(info.headers || {}),
+        },
       },
       makeProgress(emit)
     );
@@ -330,16 +342,10 @@ app.post("/api/audio", async (req, res) => {
     const [info, details] = await Promise.all([
       raceScrapers<AudioInfo>(
         [
+          (signal) => y2mateAudio(videoId, quality, signal),
           (signal) => cnvmp3Audio(videoId, quality as AudioQuality, signal),
           (signal) =>
             savetubeAudio(`https://www.youtube.com/watch?v=${videoId}`, signal),
-          (signal) =>
-            convert1sAudio(
-              `https://www.youtube.com/watch?v=${videoId}`,
-              quality,
-              signal,
-              (pct) => emit({ type: "progress", stage: "convert", percent: pct })
-            ),
           (signal) =>
             yt2songAudio(
               `https://www.youtube.com/watch?v=${videoId}`,
@@ -363,7 +369,11 @@ app.post("/api/audio", async (req, res) => {
           await axios.get(info.url as string, {
             responseType: "stream",
             timeout: 180000,
-            headers: { Referer: info.referer, "User-Agent": DESKTOP_UA },
+            headers: {
+              Referer: info.referer,
+              "User-Agent": DESKTOP_UA,
+              ...(info.headers || {}),
+            },
           })
         ).data;
     const stored = await saveAudioBuffer(

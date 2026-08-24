@@ -44,6 +44,92 @@ export function sanitizeFilename(title: string): string {
   return cleaned || "youtube-download";
 }
 
+/**
+ * Convierte una URL que devolvió un proveedor en una URL HTTP segura y válida.
+ * Algunos proveedores devuelven rutas con espacios; URL se ocupa de codificarlos.
+ */
+export function normalizeHttpUrl(value: unknown): string {
+  if (typeof value !== "string" || !value.trim()) {
+    throw new Error("El servidor no devolvió un enlace de descarga.");
+  }
+
+  let parsed: URL;
+  try {
+    parsed = new URL(value.trim());
+  } catch {
+    throw new Error("El servidor devolvió un enlace de descarga inválido.");
+  }
+
+  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+    throw new Error("El servidor devolvió un protocolo de descarga no permitido.");
+  }
+
+  return parsed.toString();
+}
+
+export interface MediaProbeOptions {
+  signal?: AbortSignal;
+  headers?: Record<string, string>;
+  timeout?: number;
+}
+
+/**
+ * Comprueba una URL de medio antes de que gane una carrera de scrapers.
+ * Solo se lee el primer chunk (máx. 64 KiB solicitados) y después se cancela
+ * el stream: evita elegir una página de error HTML con estado 200 sin descargar
+ * el archivo entero dos veces.
+ */
+export async function probeMediaUrl(
+  url: string,
+  { signal, headers = {}, timeout = 30000 }: MediaProbeOptions = {}
+): Promise<string> {
+  const normalized = normalizeHttpUrl(url);
+  const response = await fetch(normalized, {
+    method: "GET",
+    headers: {
+      Range: "bytes=0-65535",
+      "User-Agent": DESKTOP_UA,
+      ...headers,
+    },
+    dispatcher,
+    redirect: "follow",
+    signal: withTimeout(signal, timeout),
+  });
+
+  if ((!response.ok && response.status !== 206) || !response.body) {
+    throw new Error(`El enlace de descarga respondió HTTP ${response.status}.`);
+  }
+
+  const reader = response.body.getReader();
+  try {
+    const { done, value } = await reader.read();
+    if (done || !value?.byteLength) {
+      throw new Error("El enlace de descarga no devolvió contenido.");
+    }
+
+    // Las páginas de error de algunos conversores responden 200. Detectamos
+    // sus cabeceras HTML/JSON sin imponer un content-type, porque muchos CDN
+    // sirven MP3/MP4 como application/octet-stream o sin tipo.
+    const sample = Buffer.from(value.subarray(0, 256))
+      .toString("latin1")
+      .trimStart()
+      .toLowerCase();
+    if (
+      sample.startsWith("<!doctype") ||
+      sample.startsWith("<html") ||
+      sample.startsWith("<head") ||
+      sample.startsWith('{"error"') ||
+      sample.startsWith('{"message"')
+    ) {
+      throw new Error("El enlace de descarga devolvió una página de error.");
+    }
+  } finally {
+    await reader.cancel().catch(() => undefined);
+  }
+
+  return normalizeHttpUrl(response.url || normalized);
+}
+
 interface TrackHeader {
   width: number;
   height: number;
@@ -125,7 +211,7 @@ export async function inspectMp4Url(
   url: string,
   opts: { signal?: AbortSignal; headers?: Record<string, string> } = {}
 ): Promise<InspectedFile> {
-  const response = await fetch(url, {
+  const response = await fetch(normalizeHttpUrl(url), {
     method: "GET",
     headers: {
       Range: "bytes=0-1048575",
@@ -153,8 +239,31 @@ export async function inspectMp4Url(
     if (Number.isFinite(length) && length > 0) size = length;
   }
 
-  const buffer = Buffer.from(await response.arrayBuffer());
+  // Algunos CDN ignoran Range y empiezan a enviar el MP4 completo. Nunca
+  // acumulamos más de 1 MiB durante la inspección: basta para el moov de los
+  // archivos fast-start y evita descargar un video grande dos veces antes de
+  // que la carrera elija un proveedor.
+  const limit = 1024 * 1024;
+  const reader = response.body?.getReader();
+  const chunks: Buffer[] = [];
+  let received = 0;
+  try {
+    if (reader) {
+      while (received < limit) {
+        const { done, value } = await reader.read();
+        if (done || !value?.byteLength) break;
+        const take = Math.min(value.byteLength, limit - received);
+        chunks.push(Buffer.from(value.subarray(0, take)));
+        received += take;
+        if (take < value.byteLength) break;
+      }
+    }
+  } finally {
+    await reader?.cancel().catch(() => undefined);
+  }
+
+  const buffer = Buffer.concat(chunks, received);
   const resolucion = parseResolution(buffer) ?? { width: 0, height: 0 };
 
-  return { url: response.url, size, resolucion };
+  return { url: normalizeHttpUrl(response.url || url), size, resolucion };
 }

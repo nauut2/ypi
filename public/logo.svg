@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title desc">
+  <title id="title">YPi</title>
+  <desc id="desc">Logotipo geométrico original de YPi</desc>
+  <rect width="96" height="96" rx="18" fill="#0d0d0d"/>
+  <rect x="2" y="2" width="92" height="92" rx="16" fill="none" stroke="#505050" stroke-width="3"/>
+  <path d="M17 20h15l16 21 16-21h15L55 52v22H41V52L17 20Z" fill="#f4f4f1"/>
+  <path d="m59 43 18 10-18 10V43Z" fill="#c9f59a"/>
+  <path d="M14 79h15M67 79h15" stroke="#505050" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="48" cy="79" r="3" fill="#c9f59a"/>
+</svg>
