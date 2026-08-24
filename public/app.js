@@ -141,83 +141,74 @@
     },
   };
 
-  // Copy adapted for the stream-only proxy flow. The original converter
-  // strings below remain as fallbacks for legacy keys; these overrides are the
-  // visible product language.
+  // Product copy for the polished download experience. The stream-through
+  // architecture remains invisible to the visitor while still avoiding disk storage.
   Object.assign(I18N.es, {
-    metaTitle: "YPi · Media proxy",
-    metaDesc: "YPi crea enlaces temporales de proxy para media de YouTube. No guarda archivos.",
-    navConvert: "Proxy",
-    profileRole: "media proxy / stream only",
-    profileDescription: "Convierte el enlace en un stream temporal. El archivo no se guarda en este servidor.",
+    metaTitle: "YPi · Descargador de YouTube",
+    metaDesc: "YPi prepara descargas temporales de YouTube en MP4 o MP3, sin registros ni archivos guardados.",
+    navConvert: "Inicio",
+    navActivity: "Actividad",
+    profileRole: "YouTube media downloader",
+    profileDescription: "Pega un enlace, elige el formato y recibe una descarga temporal sin registros ni archivos guardados.",
     features: "Funciones de YPi",
-    streamTag: "STREAM",
-    downloadTitle: "Crear proxy",
-    streamOnly: "sin almacenamiento",
-    proxyNotice: "El archivo se transmite al navegador; no se almacena.",
-    downloadBtn: "Crear enlace",
-    processing: "Preparando proxy…",
-    ready: "Proxy listo",
-    readyState: "stream preparado",
-    directLink: "ENLACE DE PROXY",
-    downloadFile: "Abrir descarga",
+    fastTag: "RÁPIDO",
+    theme: "Tema",
+    themeToggle: "Cambiar entre tema claro y oscuro",
+    downloadTitle: "Descargar",
+    online: "en línea",
+    downloadNotice: "Tu enlace se prepara al instante y el archivo no queda guardado.",
+    downloadBtn: "Generar enlace",
+    processing: "Preparando descarga…",
+    ready: "Enlace listo",
+    readyState: "disponible ahora",
+    directLink: "ENLACE DE DESCARGA",
+    downloadFile: "Descargar archivo",
     statsTitle: "Actividad",
-    statTotal: "PROXIES TOTALES",
+    statTotal: "DESCARGAS TOTALES",
     statVideos: "Video MP4",
     statAudios: "Audio MP3",
-    guideTitle: "Cómo funciona",
-    step1Title: "Pega una URL",
-    step1Text: "Aceptamos videos, Shorts y enlaces youtu.be.",
-    step2Title: "Elige formato",
-    step2Text: "Selecciona MP4 o MP3 y la calidad disponible.",
-    step3Title: "Abre el proxy",
-    step3Text: "El origen se transmite al navegador sin guardarse en YPi.",
-    footer: "media proxy personal",
-    footerNote: "No se guardan archivos. No afiliado con YouTube o Google.",
-    preparingVideo: "Preparando proxy MP4 {q}p…",
-    preparingAudio: "Preparando proxy MP3 {q} kbps…",
-    downloading: "Conectando el proxy…",
-    searching: "Buscando un origen de media…",
-    hint: "Enlace de proxy temporal: {expiry} · no guardamos el archivo",
-    doneToast: "Proxy listo. La transferencia empieza al abrir el enlace.",
+    footer: "YouTube downloader",
+    footerNote: "Sin registros, sin archivos guardados. No afiliado con YouTube o Google.",
+    preparingVideo: "Preparando MP4 {q}p…",
+    preparingAudio: "Preparando MP3 {q} kbps…",
+    downloading: "Preparando enlace de descarga…",
+    searching: "Buscando una descarga disponible…",
+    hint: "Enlace temporal: {expiry} · el archivo no queda guardado",
+    doneToast: "Listo. Tu enlace de descarga ya está disponible.",
   });
 
   Object.assign(I18N.en, {
-    metaTitle: "YPi · Media proxy",
-    metaDesc: "YPi creates temporary proxy links for YouTube media. It does not store files.",
-    navConvert: "Proxy",
-    profileRole: "media proxy / stream only",
-    profileDescription: "Turns a link into a temporary stream. The file is never stored on this server.",
+    metaTitle: "YPi · YouTube Downloader",
+    metaDesc: "YPi prepares temporary YouTube downloads in MP4 or MP3, with no sign-up and no stored files.",
+    navConvert: "Home",
+    navActivity: "Activity",
+    profileRole: "YouTube media downloader",
+    profileDescription: "Paste a link, choose a format and get a temporary download without sign-ups or stored files.",
     features: "YPi features",
-    streamTag: "STREAM",
-    downloadTitle: "Create proxy",
-    streamOnly: "no storage",
-    proxyNotice: "The file streams to your browser; it is never stored.",
-    downloadBtn: "Create link",
-    processing: "Preparing proxy…",
-    ready: "Proxy ready",
-    readyState: "stream ready",
-    directLink: "PROXY LINK",
-    downloadFile: "Open download",
+    fastTag: "FAST",
+    theme: "Theme",
+    themeToggle: "Switch between light and dark theme",
+    downloadTitle: "Download",
+    online: "online",
+    downloadNotice: "Your link is prepared instantly and the file is never stored.",
+    downloadBtn: "Generate link",
+    processing: "Preparing download…",
+    ready: "Link ready",
+    readyState: "available now",
+    directLink: "DOWNLOAD LINK",
+    downloadFile: "Download file",
     statsTitle: "Activity",
-    statTotal: "TOTAL PROXIES",
+    statTotal: "TOTAL DOWNLOADS",
     statVideos: "MP4 video",
     statAudios: "MP3 audio",
-    guideTitle: "How it works",
-    step1Title: "Paste a URL",
-    step1Text: "We accept video, Shorts and youtu.be links.",
-    step2Title: "Choose a format",
-    step2Text: "Choose MP4 or MP3 and an available quality.",
-    step3Title: "Open the proxy",
-    step3Text: "The source streams to your browser without being saved in YPi.",
-    footer: "personal media proxy",
-    footerNote: "Files are never stored. Not affiliated with YouTube or Google.",
-    preparingVideo: "Preparing MP4 {q}p proxy…",
-    preparingAudio: "Preparing MP3 {q} kbps proxy…",
-    downloading: "Connecting proxy…",
-    searching: "Finding a media source…",
-    hint: "Temporary proxy link: {expiry} · the file is never stored",
-    doneToast: "Proxy ready. Transfer starts when you open the link.",
+    footer: "YouTube downloader",
+    footerNote: "No sign-ups, no stored files. Not affiliated with YouTube or Google.",
+    preparingVideo: "Preparing MP4 {q}p…",
+    preparingAudio: "Preparing MP3 {q} kbps…",
+    downloading: "Preparing download link…",
+    searching: "Finding an available download…",
+    hint: "Temporary link: {expiry} · the file is never stored",
+    doneToast: "Done. Your download link is now available.",
   });
 
   const VIDEO_QUALITIES = [360, 480, 720, 1080];
@@ -313,6 +304,45 @@
 
   $("langEs").addEventListener("click", () => setLanguage("es"));
   $("langEn").addEventListener("click", () => setLanguage("en"));
+
+  const themeToggle = $("themeToggle");
+  const themeIcon = $("themeIcon");
+
+  function preferredTheme() {
+    try {
+      const saved = localStorage.getItem("ypi-theme");
+      if (saved === "dark" || saved === "light") return saved;
+    } catch {
+      // Storage is optional; use the system preference below.
+    }
+    return window.matchMedia("(prefers-color-scheme: light)").matches
+      ? "light"
+      : "dark";
+  }
+
+  function updateThemeIcon(theme) {
+    if (!themeIcon) return;
+    themeIcon.innerHTML =
+      theme === "light"
+        ? '<path d="M20 12.8A8 8 0 1 1 11.2 4 6.2 6.2 0 0 0 20 12.8Z" />'
+        : '<circle cx="12" cy="12" r="4" /><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />';
+  }
+
+  function applyTheme(theme) {
+    const isLight = theme === "light";
+    document.documentElement.classList.toggle("light", isLight);
+    themeToggle?.setAttribute("aria-pressed", String(isLight));
+    updateThemeIcon(theme);
+    try {
+      localStorage.setItem("ypi-theme", theme);
+    } catch {
+      // The selected theme still applies for the current visit.
+    }
+  }
+
+  themeToggle?.addEventListener("click", () => {
+    applyTheme(document.documentElement.classList.contains("light") ? "dark" : "light");
+  });
 
   function buildQualityPills(values, active) {
     qualityPills.innerHTML = "";
@@ -700,6 +730,7 @@
     }, 0);
   });
 
+  applyTheme(preferredTheme());
   applyLanguage();
   setMode("video");
   loadStats();

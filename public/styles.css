@@ -82,6 +82,8 @@ svg { display: block; fill: none; stroke: currentColor; stroke-width: 1.8; strok
 }
 
 .tab:last-child { margin-right: 0; }
+.theme-tab { font-family: inherit; cursor: pointer; }
+.theme-tab svg { width: 17px; height: 17px; }
 .tab svg { width: 19px; height: 19px; }
 .tab:hover { color: var(--text); background: var(--hover); }
 .tab-active { color: var(--text); border-color: #575757; }
@@ -187,7 +189,7 @@ svg { display: block; fill: none; stroke: currentColor; stroke-width: 1.8; strok
 }
 
 /* Reference-style framed content blocks */
-#download, #result, #stats, #guide { width: 500px; margin: 0 auto 10px; }
+#download, #result, #stats { width: 500px; margin: 0 auto 10px; }
 
 .block-head {
   display: flex;
@@ -402,9 +404,52 @@ svg { display: block; fill: none; stroke: currentColor; stroke-width: 1.8; strok
 
 :focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
 
+/* Light theme keeps the same niju-style outline system, with paper-like surfaces. */
+html.light {
+  color-scheme: light;
+  --background: #f2f2ef;
+  --text: #171717;
+  --second-text: #686868;
+  --border: #b8b8b3;
+  --block: #fff;
+  --hover: #ecece8;
+  --soft: #f7f7f4;
+  --lime: #528627;
+  --danger: #b63b3b;
+}
+html.light body::before { opacity: .48; background-image: linear-gradient(rgb(0 0 0 / 3.5%) 1px, transparent 1px), linear-gradient(90deg, rgb(0 0 0 / 3.5%) 1px, transparent 1px); }
+html.light .header-block-banner {
+  background:
+    linear-gradient(135deg, transparent 49.4%, rgb(0 0 0 / 5%) 50%, transparent 50.6%) 0 0 / 29px 29px,
+    linear-gradient(45deg, transparent 49.4%, rgb(0 0 0 / 2.7%) 50%, transparent 50.6%) 0 0 / 29px 29px,
+    radial-gradient(circle at 84% 26%, rgb(0 0 0 / 9%), transparent 130px),
+    #e6e6e1;
+}
+html.light .header-block-banner::before,
+html.light .header-block-banner::after { border-color: rgb(0 0 0 / 13%); }
+html.light .header-block-text { background: linear-gradient(115deg, rgb(0 0 0 / 1.8%), transparent 47%), var(--block); }
+html.light #avatar { background: #f5f5f2; }
+html.light .skill-tag { background: #f5f5f2; color: #5b5b5b; }
+html.light .url-field, html.light #rLink { background: #f8f8f5; }
+html.light .paste-btn, html.light .copy-btn { background: #f8f8f5; }
+html.light .paste-btn:hover, html.light .copy-btn:hover { background: var(--hover); }
+html.light .format-toggle, html.light .quality-pills { background: #f5f5f2; }
+html.light .progress { background: #f6f6f3; border-color: #999; }
+html.light .progress-track { background: #d8d8d3; }
+html.light .thumbnail-frame { background: linear-gradient(135deg, #e5e5e1, #f7f7f4); }
+html.light .thumbnail-fallback { color: #999; }
+html.light .chip { background: #f8f8f5; }
+html.light .lang-btn.is-active, html.light .format-btn.is-active { color: #fff; background: #171717; }
+html.light .quality-pill.is-active { color: #fff; background: var(--lime); }
+html.light .theme-tab { background: var(--block); }
+html.light .theme-tab:hover { background: var(--hover); }
+html.light .proxy-btn, html.light .file-btn { border-color: #171717; background: #171717; color: #fff; }
+html.light .proxy-btn:hover, html.light .file-btn:hover { border-color: var(--lime); background: var(--lime); color: #fff; }
+html.light .toast { background: #fff; box-shadow: 0 13px 30px rgb(0 0 0 / 18%); }
+
 @media (max-width: 540px) {
   body { margin-top: 10px; }
-  .tabs, #page-content, .header-block-banner, .header-block-text, #download, #result, #stats, #guide, .block-sub, .site-footer { width: calc(100vw - 20px); }
+  .tabs, #page-content, .header-block-banner, .header-block-text, #download, #result, #stats, .block-sub, .site-footer { width: calc(100vw - 20px); }
   .tab { min-height: 38px; padding: 8px 7px; }
   .tab-name { display: none; }
   .tab-github { margin-left: 0; }
