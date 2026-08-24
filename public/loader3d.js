@@ -21,6 +21,7 @@ let active = false;
 let initialized = false;
 let last = 0;
 let resizeObserver;
+const pointer = { x: 0, y: 0, active: false };
 let palette = { background: 0x101010, object: 0xf2f2ee, accent: 0xd8ffb8 };
 
 function readPalette() {
@@ -73,6 +74,13 @@ function makeParticles() {
     geometry,
     new THREE.PointsMaterial({ color: palette.accent, size: 1.7, transparent: true, opacity: 0.62 })
   );
+}
+
+function updatePointer(event) {
+  if (!root) return;
+  const rect = root.getBoundingClientRect();
+  pointer.x = ((event.clientX - rect.left) / rect.width - 0.5) * 2;
+  pointer.y = ((event.clientY - rect.top) / rect.height - 0.5) * 2;
 }
 
 function init() {
@@ -136,6 +144,13 @@ function init() {
 
     resizeObserver = new ResizeObserver(resize);
     resizeObserver.observe(root);
+    root.addEventListener("pointermove", updatePointer);
+    root.addEventListener("pointerdown", (event) => {
+      pointer.active = true;
+      updatePointer(event);
+    });
+    root.addEventListener("pointerup", () => { pointer.active = false; });
+    root.addEventListener("pointerleave", () => { pointer.active = false; });
     resize();
     initialized = true;
     return true;
@@ -161,12 +176,16 @@ function draw(now) {
 
   core.rotation.x += elapsed * 0.42;
   core.rotation.y += elapsed * 0.68;
-  fan.rotation.z -= elapsed * 5.7;
+  fan.rotation.z -= elapsed * (pointer.active ? 10.5 : 5.7);
   outerRing.rotation.z += elapsed * 0.34;
   innerRing.rotation.y -= elapsed * 0.46;
   particles.rotation.y += elapsed * 0.07;
-  stage.rotation.y = Math.sin(now * 0.00055) * 0.18;
-  stage.position.y = Math.sin(now * 0.0013) * 4;
+  const idleY = Math.sin(now * 0.00055) * 0.18;
+  const targetY = pointer.x * 0.42 + idleY;
+  const targetX = -pointer.y * 0.22;
+  stage.rotation.y += (targetY - stage.rotation.y) * 0.055;
+  stage.rotation.x += (targetX - stage.rotation.x) * 0.055;
+  stage.position.y = Math.sin(now * 0.0013) * 4 + pointer.y * -5;
 
   renderer.render(scene, camera);
   frame = requestAnimationFrame(draw);
