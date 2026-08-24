@@ -1,4 +1,4 @@
-/* YPi · interfaz bilingüe ES/EN */
+/* YPi — download UI, ES/EN and local light/dark preference */
 (() => {
   "use strict";
 
@@ -6,22 +6,18 @@
 
   const I18N = {
     es: {
-      metaTitle: "YPi · Conversor de YouTube",
-      metaDesc: "YPi convierte enlaces de YouTube a MP4 o MP3 con una interfaz rápida, clara y bilingüe.",
-      brandHome: "YPi — inicio",
+      metaTitle: "ypi",
+      metaDesc: "Descarga media de YouTube en MP4 o MP3 sin registros ni archivos guardados.",
       mainNav: "Navegación principal",
-      navConvert: "Convertir",
-      navGuide: "Guía",
-      online: "En línea",
-      onlineTitle: "Servicio disponible",
+      navHome: "Inicio",
+      navDetails: "Detalles",
       language: "Idioma",
-      eyebrow: "CONVERSOR DE MEDIOS",
-      heroTitle: "Tu enlace.",
-      heroAccent: "Tu archivo.",
-      heroCopy: "Convierte videos públicos de YouTube a MP4 o MP3 en unos pasos, sin crear una cuenta.",
-      legalInline: "Usa solo contenido que tengas derecho a descargar.",
-      downloadTitle: "Convertir enlace",
-      noAccount: "sin cuenta",
+      themeToggle: "Cambiar entre tema claro y oscuro",
+      profileRole: "YouTube downloader",
+      profileDescription: "Descarga audio y video con una interfaz simple, rápida y sin registros.",
+      formatsLabel: "Formatos disponibles",
+      online: "En línea",
+      downloadTitle: "Descargar",
       urlLabel: "ENLACE DE YOUTUBE",
       urlPlaceholder: "https://youtube.com/watch?v=…",
       paste: "Pegar",
@@ -30,65 +26,51 @@
       qualityLabel: "CALIDAD",
       video: "Video",
       audio: "Audio",
-      compatibility: "Videos, Shorts y enlaces youtu.be",
-      downloadBtn: "Crear descarga",
-      processing: "Preparando conversión…",
-      ready: "Tu archivo está listo",
+      downloadCaption: "Enlace temporal · sin registros · sin archivos guardados",
+      downloadBtn: "Descargar",
+      loadingTitle: "Preparando descarga",
+      working: "Procesando",
+      processing: "Buscando un enlace disponible…",
+      loaderHint: "No cierres esta página mientras preparamos los detalles.",
+      detailsTitle: "Detalles",
+      available: "Disponible",
       thumbnailAlt: "Miniatura del video",
-      directLink: "ENLACE DIRECTO",
+      downloadLink: "ENLACE DE DESCARGA",
       copy: "Copiar",
+      copyTitle: "Copiar enlace",
       downloadFile: "Descargar archivo",
-      statsTitle: "Actividad",
-      statTotal: "DESCARGAS TOTALES",
-      statVideos: "Videos MP4",
-      statAudios: "Audios MP3",
-      statToday: "Hoy",
-      guideTitle: "Así de simple",
-      step1Title: "Pega una URL",
-      step1Text: "Aceptamos enlaces de videos, Shorts y youtu.be.",
-      step2Title: "Elige formato y calidad",
-      step2Text: "Selecciona MP4 para video o MP3 para audio.",
-      step3Title: "Guarda el archivo",
-      step3Text: "Recibe una descarga directa temporal al terminar.",
-      footer: "conversor de medios personal",
-      footerNote: "No afiliado con YouTube o Google. Respeta los derechos y las condiciones de uso.",
+      footer: "media downloader",
       noUrl: "Pega primero un enlace de YouTube.",
-      badUrl: "Ese enlace no parece ser una URL de YouTube válida.",
+      badUrl: "Ese enlace no parece ser una URL válida de YouTube.",
       serverError: "El servidor no pudo completar la solicitud.",
-      connectionClosed: "La conexión se cerró antes de terminar la conversión.",
-      failed: "No se pudo completar la descarga.",
+      connectionClosed: "La conexión se cerró antes de terminar.",
+      failed: "No se pudo preparar la descarga.",
       clipboardUnavailable: "No se pudo leer el portapapeles. Pega el enlace manualmente.",
       pasted: "Enlace pegado.",
       copied: "Enlace copiado al portapapeles.",
       copiedShort: "Enlace copiado.",
       preparingVideo: "Preparando MP4 {q}p…",
       preparingAudio: "Preparando MP3 {q} kbps…",
-      converting: "Convirtiendo…",
-      downloading: "Descargando archivo…",
-      searching: "Buscando un conversor disponible…",
+      downloading: "Preparando enlace de descarga…",
       duration: "Duración {value}",
       expiresMin: "expira en {n} min",
       expiresHour: "expira en {n} h",
-      hint: "Enlace temporal: {expiry}",
-      doneToast: "Listo. Tu archivo está disponible.",
+      hint: "Enlace temporal: {expiry} · el archivo no queda guardado",
+      doneToast: "Listo. Tu enlace de descarga ya está disponible.",
     },
     en: {
-      metaTitle: "YPi · YouTube Converter",
-      metaDesc: "YPi converts YouTube links to MP4 or MP3 with a quick, clear bilingual interface.",
-      brandHome: "YPi — home",
+      metaTitle: "ypi",
+      metaDesc: "Download YouTube media in MP4 or MP3 with no sign-up and no stored files.",
       mainNav: "Main navigation",
-      navConvert: "Convert",
-      navGuide: "Guide",
-      online: "Online",
-      onlineTitle: "Service available",
+      navHome: "Home",
+      navDetails: "Details",
       language: "Language",
-      eyebrow: "MEDIA CONVERTER",
-      heroTitle: "Your link.",
-      heroAccent: "Your file.",
-      heroCopy: "Convert public YouTube videos to MP4 or MP3 in a few steps, with no account required.",
-      legalInline: "Only use content you have the right to download.",
-      downloadTitle: "Convert a link",
-      noAccount: "no account",
+      themeToggle: "Switch between light and dark theme",
+      profileRole: "YouTube downloader",
+      profileDescription: "Download audio and video with a simple, fast, sign-up-free interface.",
+      formatsLabel: "Available formats",
+      online: "Online",
+      downloadTitle: "Download",
       urlLabel: "YOUTUBE LINK",
       urlPlaceholder: "https://youtube.com/watch?v=…",
       paste: "Paste",
@@ -97,119 +79,39 @@
       qualityLabel: "QUALITY",
       video: "Video",
       audio: "Audio",
-      compatibility: "Videos, Shorts and youtu.be links",
-      downloadBtn: "Create download",
-      processing: "Preparing conversion…",
-      ready: "Your file is ready",
+      downloadCaption: "Temporary link · no sign-up · no stored files",
+      downloadBtn: "Download",
+      loadingTitle: "Preparing download",
+      working: "Working",
+      processing: "Finding an available link…",
+      loaderHint: "Do not close this page while we prepare the details.",
+      detailsTitle: "Details",
+      available: "Available",
       thumbnailAlt: "Video thumbnail",
-      directLink: "DIRECT LINK",
+      downloadLink: "DOWNLOAD LINK",
       copy: "Copy",
+      copyTitle: "Copy link",
       downloadFile: "Download file",
-      statsTitle: "Activity",
-      statTotal: "TOTAL DOWNLOADS",
-      statVideos: "MP4 videos",
-      statAudios: "MP3 audio",
-      statToday: "Today",
-      guideTitle: "As simple as this",
-      step1Title: "Paste a URL",
-      step1Text: "We accept video, Shorts and youtu.be links.",
-      step2Title: "Choose format and quality",
-      step2Text: "Select MP4 for video or MP3 for audio.",
-      step3Title: "Save the file",
-      step3Text: "Receive a temporary direct download when it is ready.",
-      footer: "personal media converter",
-      footerNote: "Not affiliated with YouTube or Google. Respect rights and terms of use.",
+      footer: "media downloader",
       noUrl: "Paste a YouTube link first.",
       badUrl: "That does not look like a valid YouTube URL.",
       serverError: "The server could not complete the request.",
-      connectionClosed: "The connection closed before the conversion finished.",
-      failed: "The download could not be completed.",
+      connectionClosed: "The connection closed before completion.",
+      failed: "The download could not be prepared.",
       clipboardUnavailable: "The clipboard could not be read. Please paste the link manually.",
       pasted: "Link pasted.",
       copied: "Link copied to your clipboard.",
       copiedShort: "Link copied.",
       preparingVideo: "Preparing MP4 {q}p…",
       preparingAudio: "Preparing MP3 {q} kbps…",
-      converting: "Converting…",
-      downloading: "Downloading file…",
-      searching: "Looking for an available converter…",
+      downloading: "Preparing download link…",
       duration: "Duration {value}",
       expiresMin: "expires in {n} min",
       expiresHour: "expires in {n} h",
-      hint: "Temporary link: {expiry}",
-      doneToast: "Done. Your file is available.",
+      hint: "Temporary link: {expiry} · the file is never stored",
+      doneToast: "Done. Your download link is now available.",
     },
   };
-
-  // Product copy for the polished download experience. The stream-through
-  // architecture remains invisible to the visitor while still avoiding disk storage.
-  Object.assign(I18N.es, {
-    metaTitle: "YPi · Descargador de YouTube",
-    metaDesc: "YPi prepara descargas temporales de YouTube en MP4 o MP3, sin registros ni archivos guardados.",
-    navConvert: "Inicio",
-    navActivity: "Actividad",
-    profileRole: "YouTube media downloader",
-    profileDescription: "Pega un enlace, elige el formato y recibe una descarga temporal sin registros ni archivos guardados.",
-    features: "Funciones de YPi",
-    fastTag: "RÁPIDO",
-    theme: "Tema",
-    themeToggle: "Cambiar entre tema claro y oscuro",
-    downloadTitle: "Descargar",
-    online: "en línea",
-    downloadNotice: "Tu enlace se prepara al instante y el archivo no queda guardado.",
-    downloadBtn: "Generar enlace",
-    processing: "Preparando descarga…",
-    ready: "Enlace listo",
-    readyState: "disponible ahora",
-    directLink: "ENLACE DE DESCARGA",
-    downloadFile: "Descargar archivo",
-    statsTitle: "Actividad",
-    statTotal: "DESCARGAS TOTALES",
-    statVideos: "Video MP4",
-    statAudios: "Audio MP3",
-    footer: "YouTube downloader",
-    footerNote: "Sin registros, sin archivos guardados. No afiliado con YouTube o Google.",
-    preparingVideo: "Preparando MP4 {q}p…",
-    preparingAudio: "Preparando MP3 {q} kbps…",
-    downloading: "Preparando enlace de descarga…",
-    searching: "Buscando una descarga disponible…",
-    hint: "Enlace temporal: {expiry} · el archivo no queda guardado",
-    doneToast: "Listo. Tu enlace de descarga ya está disponible.",
-  });
-
-  Object.assign(I18N.en, {
-    metaTitle: "YPi · YouTube Downloader",
-    metaDesc: "YPi prepares temporary YouTube downloads in MP4 or MP3, with no sign-up and no stored files.",
-    navConvert: "Home",
-    navActivity: "Activity",
-    profileRole: "YouTube media downloader",
-    profileDescription: "Paste a link, choose a format and get a temporary download without sign-ups or stored files.",
-    features: "YPi features",
-    fastTag: "FAST",
-    theme: "Theme",
-    themeToggle: "Switch between light and dark theme",
-    downloadTitle: "Download",
-    online: "online",
-    downloadNotice: "Your link is prepared instantly and the file is never stored.",
-    downloadBtn: "Generate link",
-    processing: "Preparing download…",
-    ready: "Link ready",
-    readyState: "available now",
-    directLink: "DOWNLOAD LINK",
-    downloadFile: "Download file",
-    statsTitle: "Activity",
-    statTotal: "TOTAL DOWNLOADS",
-    statVideos: "MP4 video",
-    statAudios: "MP3 audio",
-    footer: "YouTube downloader",
-    footerNote: "No sign-ups, no stored files. Not affiliated with YouTube or Google.",
-    preparingVideo: "Preparing MP4 {q}p…",
-    preparingAudio: "Preparing MP3 {q} kbps…",
-    downloading: "Preparing download link…",
-    searching: "Finding an available download…",
-    hint: "Temporary link: {expiry} · the file is never stored",
-    doneToast: "Done. Your download link is now available.",
-  });
 
   const VIDEO_QUALITIES = [360, 480, 720, 1080];
   const AUDIO_QUALITIES = [128, 96, 256, 320];
@@ -217,31 +119,28 @@
   const urlInput = $("url");
   const pasteButton = $("paste");
   const goButton = $("go");
-  const qualityPills = $("qualityPills");
   const formatButtons = Array.from(document.querySelectorAll(".format-btn"));
+  const qualityPills = $("qualityPills");
   const progress = $("progress");
   const progressText = $("progressText");
-  const progressFill = $("progressFill");
   const progressPct = $("progressPct");
   const result = $("result");
-  const statsSection = $("stats");
   const toasts = $("toasts");
+  const themeToggle = $("themeToggle");
+  const themeIcon = $("themeIcon");
 
+  let lang = getLanguage();
   let mode = "video";
   let quality = 360;
-  let lang = detectLanguage();
   let lastResult = null;
-  let lastStats = null;
-  let lastProgressStage = "download";
-  let lastProgressPercent = -1;
-  let lastStageLabel = "";
+  let currentStage = "";
 
-  function detectLanguage() {
+  function getLanguage() {
     try {
-      const saved = localStorage.getItem("ypi-lang");
-      if (saved === "es" || saved === "en") return saved;
+      const stored = localStorage.getItem("ypi-lang");
+      if (stored === "es" || stored === "en") return stored;
     } catch {
-      // Private browsing or blocked storage: use browser language instead.
+      // Storage is optional.
     }
     return (navigator.language || "es").toLowerCase().startsWith("en") ? "en" : "es";
   }
@@ -278,61 +177,51 @@
       if (key) element.setAttribute("alt", t(key));
     });
 
-    const es = $("langEs");
-    const en = $("langEn");
-    es.classList.toggle("is-active", lang === "es");
-    en.classList.toggle("is-active", lang === "en");
-    es.setAttribute("aria-pressed", String(lang === "es"));
-    en.setAttribute("aria-pressed", String(lang === "en"));
+    const esButton = $("langEs");
+    const enButton = $("langEn");
+    esButton.classList.toggle("active", lang === "es");
+    enButton.classList.toggle("active", lang === "en");
+    esButton.setAttribute("aria-pressed", String(lang === "es"));
+    enButton.setAttribute("aria-pressed", String(lang === "en"));
 
     if (lastResult) renderResult(lastResult);
-    if (lastStats) renderStats(lastStats, true);
-    if (!progress.hidden) updateProgressText();
+    if (!progress.hidden && currentStage) progressText.textContent = currentStage;
   }
 
   function setLanguage(next) {
-    if (next !== "es" && next !== "en") return;
-    if (lang === next) return;
+    if (next !== "es" && next !== "en" || next === lang) return;
     lang = next;
     try {
       localStorage.setItem("ypi-lang", lang);
     } catch {
-      // Language still changes for this visit.
+      // Change remains active for this visit.
     }
     applyLanguage();
   }
 
-  $("langEs").addEventListener("click", () => setLanguage("es"));
-  $("langEn").addEventListener("click", () => setLanguage("en"));
-
-  const themeToggle = $("themeToggle");
-  const themeIcon = $("themeIcon");
-
-  function preferredTheme() {
+  function getTheme() {
     try {
-      const saved = localStorage.getItem("ypi-theme");
-      if (saved === "dark" || saved === "light") return saved;
+      const stored = localStorage.getItem("ypi-theme");
+      if (stored === "light" || stored === "dark") return stored;
     } catch {
-      // Storage is optional; use the system preference below.
+      // Storage is optional.
     }
-    return window.matchMedia("(prefers-color-scheme: light)").matches
-      ? "light"
-      : "dark";
+    return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
   }
 
-  function updateThemeIcon(theme) {
+  function renderThemeIcon(theme) {
     if (!themeIcon) return;
-    themeIcon.innerHTML =
-      theme === "light"
-        ? '<path d="M20 12.8A8 8 0 1 1 11.2 4 6.2 6.2 0 0 0 20 12.8Z" />'
-        : '<circle cx="12" cy="12" r="4" /><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />';
+    themeIcon.innerHTML = theme === "light"
+      ? '<path d="M20 12.8A8 8 0 1 1 11.2 4 6.2 6.2 0 0 0 20 12.8Z" />'
+      : '<circle cx="12" cy="12" r="4" /><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />';
   }
 
   function applyTheme(theme) {
     const isLight = theme === "light";
     document.documentElement.classList.toggle("light", isLight);
     themeToggle?.setAttribute("aria-pressed", String(isLight));
-    updateThemeIcon(theme);
+    renderThemeIcon(theme);
+    window.YPi3DLoader?.setTheme?.();
     try {
       localStorage.setItem("ypi-theme", theme);
     } catch {
@@ -340,30 +229,22 @@
     }
   }
 
-  themeToggle?.addEventListener("click", () => {
-    applyTheme(document.documentElement.classList.contains("light") ? "dark" : "light");
-  });
-
-  function buildQualityPills(values, active) {
+  function buildQualityPills(values, activeValue) {
     qualityPills.innerHTML = "";
     values.forEach((value) => {
       const button = document.createElement("button");
-      const isActive = value === active;
+      const selected = value === activeValue;
       button.type = "button";
-      button.className = `quality-pill${isActive ? " is-active" : ""}`;
-      button.dataset.quality = String(value);
+      button.className = `quality-pill${selected ? " active" : ""}`;
       button.textContent = String(value);
-      button.setAttribute("aria-pressed", String(isActive));
-      button.setAttribute(
-        "aria-label",
-        mode === "video" ? `${value}p` : `${value} kbps`
-      );
+      button.setAttribute("aria-pressed", String(selected));
+      button.setAttribute("aria-label", mode === "video" ? `${value}p` : `${value} kbps`);
       button.addEventListener("click", () => {
         quality = value;
-        qualityPills.querySelectorAll(".quality-pill").forEach((pill) => {
-          const selected = pill === button;
-          pill.classList.toggle("is-active", selected);
-          pill.setAttribute("aria-pressed", String(selected));
+        qualityPills.querySelectorAll(".quality-pill").forEach((item) => {
+          const active = item === button;
+          item.classList.toggle("active", active);
+          item.setAttribute("aria-pressed", String(active));
         });
       });
       qualityPills.appendChild(button);
@@ -380,15 +261,24 @@
     quality = mode === "video" ? 360 : 128;
     formatButtons.forEach((button) => {
       const selected = button.dataset.mode === mode;
-      button.classList.toggle("is-active", selected);
+      button.classList.toggle("active", selected);
       button.setAttribute("aria-selected", String(selected));
     });
     buildQualityPills(mode === "video" ? VIDEO_QUALITIES : AUDIO_QUALITIES, quality);
   }
 
-  formatButtons.forEach((button) => {
-    button.addEventListener("click", () => setMode(button.dataset.mode));
-  });
+  function toast(message, type = "ok") {
+    const node = document.createElement("div");
+    node.className = `toast${type === "error" ? " error" : ""}`;
+    node.innerHTML = `<span class="toast-mark">${type === "error" ? "×" : "✓"}</span><span>${escapeHtml(message)}</span>`;
+    toasts.appendChild(node);
+    window.setTimeout(() => {
+      node.style.opacity = "0";
+      node.style.transform = "translateY(6px)";
+      node.style.transition = "opacity .18s ease, transform .18s ease";
+      window.setTimeout(() => node.remove(), 200);
+    }, 4300);
+  }
 
   function escapeHtml(value) {
     return String(value)
@@ -399,84 +289,53 @@
       .replace(/'/g, "&#039;");
   }
 
-  function toast(message, kind = "ok") {
-    const node = document.createElement("div");
-    node.className = `toast${kind === "error" ? " is-error" : ""}`;
-    node.innerHTML = `<span class="toast-mark">${kind === "error" ? "×" : "✓"}</span><span>${escapeHtml(message)}</span>`;
-    toasts.appendChild(node);
-    window.setTimeout(() => {
-      node.style.opacity = "0";
-      node.style.transform = "translateY(6px)";
-      node.style.transition = "opacity .18s ease, transform .18s ease";
-      window.setTimeout(() => node.remove(), 200);
-    }, 4400);
-  }
-
-  function formatBytes(bytes) {
-    const amount = Number(bytes || 0);
-    if (!Number.isFinite(amount) || amount <= 0) return "—";
-    const units = ["B", "KB", "MB", "GB"];
-    let value = amount;
-    let unit = 0;
-    while (value >= 1024 && unit < units.length - 1) {
-      value /= 1024;
-      unit += 1;
-    }
-    return `${value.toFixed(unit === 0 ? 0 : 1)} ${units[unit]}`;
-  }
-
-  function formatDuration(seconds) {
-    const total = Number(seconds || 0);
-    if (!Number.isFinite(total) || total <= 0) return "";
-    const hours = Math.floor(total / 3600);
-    const minutes = Math.floor((total % 3600) / 60);
-    const secs = Math.floor(total % 60);
-    const pad = (number) => String(number).padStart(2, "0");
-    return hours ? `${hours}:${pad(minutes)}:${pad(secs)}` : `${minutes}:${pad(secs)}`;
-  }
-
-  function extractVideoId(input) {
-    const clean = input.trim();
-    const patterns = [
+  function validYoutubeLink(value) {
+    const text = value.trim();
+    return [
       /youtube\.com\/(?:watch\?.*?v=|shorts\/|embed\/|live\/|v\/)([\w-]{11})/i,
       /youtu\.be\/([\w-]{11})/i,
       /[?&]v=([\w-]{11})/i,
       /^([\w-]{11})$/,
-    ];
-    return patterns.some((pattern) => pattern.test(clean));
+    ].some((pattern) => pattern.test(text));
   }
 
-  function setProgress(percent) {
-    const value = Math.max(0, Math.min(100, Math.round(Number(percent) || 0)));
-    progressFill.style.width = `${value}%`;
-    progressPct.textContent = `${value}%`;
+  function formatDuration(value) {
+    const seconds = Number(value || 0);
+    if (!Number.isFinite(seconds) || seconds <= 0) return "";
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainder = Math.floor(seconds % 60);
+    const pad = (number) => String(number).padStart(2, "0");
+    return hours ? `${hours}:${pad(minutes)}:${pad(remainder)}` : `${minutes}:${pad(remainder)}`;
   }
 
-  function updateProgressText() {
-    if (lastProgressPercent >= 0) {
-      progressText.textContent =
-        lastProgressStage === "convert"
-          ? `${t("converting")} ${Math.round(lastProgressPercent)}%`
-          : `${t("downloading")} ${Math.round(lastProgressPercent)}%`;
-      return;
-    }
-    progressText.textContent = lastStageLabel || t("processing");
+  function showLoader(label) {
+    currentStage = label || t("processing");
+    result.hidden = true;
+    progress.hidden = false;
+    progressText.textContent = currentStage;
+    progressPct.textContent = "···";
+    window.YPi3DLoader?.start?.();
   }
 
-  function handleProgressEvent(event) {
+  function hideLoader() {
+    window.YPi3DLoader?.stop?.();
+    progress.hidden = true;
+    currentStage = "";
+  }
+
+  function handleEvent(event) {
     if (event.type === "stage") {
-      lastStageLabel = event.label || t("searching");
-      lastProgressPercent = -1;
-      progressText.textContent = lastStageLabel;
+      currentStage = event.label || t("processing");
+      progressText.textContent = currentStage;
+      progressPct.textContent = "···";
       return;
     }
     if (event.type === "progress") {
-      const percent = Number(event.percent);
-      if (Number.isFinite(percent) && percent >= 0) {
-        lastProgressPercent = percent;
-        lastProgressStage = event.stage === "convert" ? "convert" : "download";
-        setProgress(percent);
-        updateProgressText();
+      const percentage = Number(event.percent);
+      if (Number.isFinite(percentage) && percentage >= 0) {
+        progressPct.textContent = `${Math.round(Math.min(100, percentage))}%`;
+        progressText.textContent = event.stage === "download" ? t("downloading") : t("processing");
       }
     }
   }
@@ -488,7 +347,7 @@
       urlInput.focus();
       return;
     }
-    if (!extractVideoId(url)) {
+    if (!validYoutubeLink(url)) {
       toast(t("badUrl"), "error");
       urlInput.focus();
       return;
@@ -497,15 +356,7 @@
     goButton.disabled = true;
     urlInput.disabled = true;
     pasteButton.disabled = true;
-    result.hidden = true;
-    progress.hidden = false;
-    lastProgressPercent = -1;
-    lastStageLabel = "";
-    setProgress(0);
-    progressText.textContent =
-      mode === "video"
-        ? t("preparingVideo", { q: quality })
-        : t("preparingAudio", { q: quality });
+    showLoader(mode === "video" ? t("preparingVideo", { q: quality }) : t("preparingAudio", { q: quality }));
 
     try {
       const response = await fetch(`/api/${mode}`, {
@@ -516,13 +367,11 @@
         },
         body: JSON.stringify({ url, quality, lang }),
       });
-      const contentType = response.headers.get("content-type") || "";
+      const type = response.headers.get("content-type") || "";
 
-      if (!contentType.includes("text/event-stream")) {
+      if (!type.includes("text/event-stream")) {
         const payload = await response.json().catch(() => null);
-        if (!response.ok || !payload?.ok) {
-          throw new Error(payload?.error || t("serverError"));
-        }
+        if (!response.ok || !payload?.ok) throw new Error(payload?.error || t("serverError"));
         showResult(payload.data);
         return;
       }
@@ -531,50 +380,45 @@
       if (!reader) throw new Error(t("connectionClosed"));
       const decoder = new TextDecoder();
       let buffer = "";
-      let complete = false;
+      let done = false;
       let failure = "";
 
       while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+        const { done: streamDone, value } = await reader.read();
+        if (streamDone) break;
         buffer += decoder.decode(value, { stream: true });
-        let breakAt = buffer.indexOf("\n\n");
-        while (breakAt !== -1) {
-          const chunk = buffer.slice(0, breakAt);
-          buffer = buffer.slice(breakAt + 2);
-          const dataLine = chunk.split("\n").find((line) => line.startsWith("data: "));
-          if (dataLine) {
+        let split = buffer.indexOf("\n\n");
+        while (split !== -1) {
+          const chunk = buffer.slice(0, split);
+          buffer = buffer.slice(split + 2);
+          const line = chunk.split("\n").find((entry) => entry.startsWith("data: "));
+          if (line) {
             try {
-              const event = JSON.parse(dataLine.slice(6));
-              if (event.type === "stage" || event.type === "progress") handleProgressEvent(event);
+              const event = JSON.parse(line.slice(6));
+              if (event.type === "stage" || event.type === "progress") handleEvent(event);
               if (event.type === "done") {
                 showResult(event.data);
-                complete = true;
+                done = true;
               }
               if (event.type === "error") failure = event.message || t("serverError");
             } catch {
-              // Ignore an incomplete/malformed SSE line and keep reading.
+              // Ignore malformed SSE entries and continue parsing the stream.
             }
           }
-          if (complete || failure) break;
-          breakAt = buffer.indexOf("\n\n");
+          if (done || failure) break;
+          split = buffer.indexOf("\n\n");
         }
-        if (complete || failure) break;
+        if (done || failure) break;
       }
-
       if (failure) throw new Error(failure);
-      if (!complete) throw new Error(t("connectionClosed"));
+      if (!done) throw new Error(t("connectionClosed"));
     } catch (error) {
       toast(error instanceof Error ? error.message : t("failed"), "error");
     } finally {
+      hideLoader();
       goButton.disabled = false;
       urlInput.disabled = false;
       pasteButton.disabled = false;
-      progress.hidden = true;
-      progressFill.style.width = "0%";
-      progressPct.textContent = "0%";
-      lastProgressPercent = -1;
-      lastStageLabel = "";
     }
   }
 
@@ -589,48 +433,44 @@
 
     if (data.miniatura) {
       thumb.style.display = "block";
-      thumb.dataset.failed = "";
+      thumb.dataset.fallback = "";
       thumb.alt = data.titulo || t("thumbnailAlt");
       thumb.onerror = () => {
-        if (!thumb.dataset.failed && thumb.src.includes("maxresdefault")) {
-          thumb.dataset.failed = "fallback";
+        if (!thumb.dataset.fallback && thumb.src.includes("maxresdefault")) {
+          thumb.dataset.fallback = "1";
           thumb.src = thumb.src.replace("maxresdefault", "hqdefault");
-          return;
+        } else {
+          thumb.style.display = "none";
         }
-        thumb.style.display = "none";
       };
       thumb.src = data.miniatura;
     } else {
       thumb.style.display = "none";
     }
 
-    title.textContent = data.titulo || t("ready");
+    title.textContent = data.titulo || t("detailsTitle");
     const duration = formatDuration(data.duracion);
-    meta.textContent = duration ? t("duration", { value: duration }) : data.canal || "";
+    meta.textContent = [data.canal, duration ? t("duration", { value: duration }) : ""].filter(Boolean).join(" · ");
 
     chips.innerHTML = "";
     [
       { text: data.calidad, ok: true },
-      { text: formatBytes(data.size), ok: false },
       { text: data.filename, ok: false },
     ]
-      .filter((item) => item.text && item.text !== "—")
+      .filter((item) => item.text)
       .forEach((item) => {
         const chip = document.createElement("span");
-        chip.className = `chip${item.ok ? " is-ok" : ""}`;
+        chip.className = `chip${item.ok ? " ok" : ""}`;
         chip.textContent = item.text;
         chips.appendChild(chip);
       });
 
     link.value = data.downloadUrl || "";
     $("rDownload").href = data.downloadUrl || "#";
-
-    const seconds = Number(data.expiraEn || 180);
-    const minutes = Math.max(1, Math.round(seconds / 60));
-    const expiry =
-      seconds < 3600
-        ? t("expiresMin", { n: minutes })
-        : t("expiresHour", { n: Math.round(seconds / 3600) });
+    const seconds = Number(data.expiraEn || 120);
+    const expiry = seconds < 3600
+      ? t("expiresMin", { n: Math.max(1, Math.round(seconds / 60)) })
+      : t("expiresHour", { n: Math.round(seconds / 3600) });
     hint.textContent = t("hint", { expiry });
   }
 
@@ -638,58 +478,30 @@
     lastResult = data;
     renderResult(data);
     result.hidden = false;
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    result.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "nearest" });
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    result.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "nearest" });
     toast(t("doneToast"));
-    loadStats();
   }
 
-  function numberFormat(value) {
-    return Number(value || 0).toLocaleString(lang === "en" ? "en-US" : "es-MX");
-  }
+  $("langEs").addEventListener("click", () => setLanguage("es"));
+  $("langEn").addEventListener("click", () => setLanguage("en"));
+  themeToggle?.addEventListener("click", () => {
+    applyTheme(document.documentElement.classList.contains("light") ? "dark" : "light");
+  });
+  formatButtons.forEach((button) => button.addEventListener("click", () => setMode(button.dataset.mode)));
 
-  function animateCount(element, target, skipAnimation) {
-    const finalValue = Number(target || 0);
-    if (skipAnimation || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      element.textContent = numberFormat(finalValue);
-      element.dataset.value = String(finalValue);
-      return;
-    }
-    const initial = Number(element.dataset.value || "0");
-    const started = performance.now();
-    const duration = 550;
-    const tick = (now) => {
-      const progressValue = Math.min(1, (now - started) / duration);
-      const eased = 1 - Math.pow(1 - progressValue, 3);
-      element.textContent = numberFormat(Math.round(initial + (finalValue - initial) * eased));
-      if (progressValue < 1) requestAnimationFrame(tick);
-      else element.dataset.value = String(finalValue);
-    };
-    requestAnimationFrame(tick);
-  }
-
-  function renderStats(stats, skipAnimation = false) {
-    if (!stats) return;
-    statsSection.hidden = false;
-    [
-      ["statTotal", stats.total],
-      ["statVideos", stats.videos],
-      ["statAudios", stats.audios],
-      ["statToday", stats.hoy],
-    ].forEach(([id, value]) => animateCount($(id), value, skipAnimation));
-  }
-
-  async function loadStats() {
+  pasteButton.addEventListener("click", async () => {
     try {
-      const response = await fetch("/api/stats", { headers: { Accept: "application/json" } });
-      const payload = await response.json();
-      if (!response.ok || !payload?.ok || !payload.data) return;
-      lastStats = payload.data;
-      renderStats(lastStats);
+      const text = await navigator.clipboard.readText();
+      if (!text) return;
+      urlInput.value = text.trim();
+      urlInput.focus();
+      toast(t("pasted"));
     } catch {
-      // Statistics are optional; the converter should work without them.
+      toast(t("clipboardUnavailable"), "error");
+      urlInput.focus();
     }
-  }
+  });
 
   $("rCopy").addEventListener("click", async () => {
     const link = $("rLink");
@@ -706,20 +518,6 @@
     }
   });
 
-  pasteButton.addEventListener("click", async () => {
-    try {
-      const text = await navigator.clipboard.readText();
-      if (!text) return;
-      urlInput.value = text.trim();
-      urlInput.focus();
-      toast(t("pasted"));
-      if (urlInput.value.includes("shorts/") && mode !== "video") setMode("video");
-    } catch {
-      toast(t("clipboardUnavailable"), "error");
-      urlInput.focus();
-    }
-  });
-
   goButton.addEventListener("click", requestDownload);
   urlInput.addEventListener("keydown", (event) => {
     if (event.key === "Enter") requestDownload();
@@ -730,8 +528,7 @@
     }, 0);
   });
 
-  applyTheme(preferredTheme());
+  applyTheme(getTheme());
   applyLanguage();
   setMode("video");
-  loadStats();
 })();
