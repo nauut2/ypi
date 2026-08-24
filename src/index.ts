@@ -1,14 +1,12 @@
-import axios from "axios";
 import express from "express";
 import path from "node:path";
 import {
-  createFileStream,
-  getTTLSeconds,
-  cleanupOldFiles,
-  resolveFile,
-  saveAudioBuffer,
-  saveVideoBuffer,
-} from "./storage";
+  createProxyTicket,
+  cleanupProxyTickets,
+  findProxyTicket,
+  getProxyTTLSeconds,
+  streamProxyTicket,
+} from "./proxy";
 import {
   ytmp3 as cnvmp3Audio,
   ytmp4 as cnvmp3Video,
@@ -19,74 +17,75 @@ import {
   ytmp4 as y2mateVideo,
 } from "./services/y2mate";
 import { ytmp4 as androidVideo } from "./services/android";
-import { ytmp3 as yt2songAudio } from "./services/yt2song";
 import { fetchVideoDetails } from "./services/oembed";
 import {
   ytmp4 as savetubeVideo,
   ytmp3 as savetubeAudio,
 } from "./services/savetube";
 import { getStats, recordDownload } from "./stats";
-import { DESKTOP_UA, extractVideoId, sanitizeFilename } from "./utils";
+import { extractVideoId, sanitizeFilename } from "./utils";
 
 const app = express();
 app.set("trust proxy", true);
 app.disable("x-powered-by");
-
 app.use(express.json({ limit: "100kb" }));
 
-const CONCURRENT_MAX = 4;
+const PREPARE_CONCURRENT_MAX = 4;
+const PROXY_CONCURRENT_MAX = 4;
 const PER_IP_LIMIT = 5;
 const PER_IP_WINDOW = 60_000;
-let activeDownloads = 0;
+let activePreparations = 0;
+let activeProxyStreams = 0;
 const hits = new Map<string, number[]>();
 
-// mensajes según el idioma que pide el cliente (es/en)
 const T = {
   es: {
     rateLimited: "Demasiadas peticiones. Espera un momento.",
-    busy: "Hay muchas descargas en curso. Inténtalo en unos segundos.",
+    busy: "Hay muchas conversiones en curso. Inténtalo en unos segundos.",
+    proxyBusy: "Hay muchas transferencias por proxy en curso. Inténtalo de nuevo.",
     invalidUrl: "El enlace de YouTube no es válido.",
     invalidVideoQuality: "Calidad de video no válida (360, 480, 720 o 1080).",
     invalidAudioQuality: "Calidad de audio no válida.",
-    stageSearch: "Buscando en varios servidores…",
+    stageSearch: "Buscando un origen de media…",
     stageDetails: "Obteniendo detalles del video…",
-    stageDownloadVideo: "Descargando el archivo MP4…",
-    stageDownloadAudio: "Descargando el archivo MP3…",
-    videoError: "Error al descargar el video.",
-    audioError: "Error al descargar el audio.",
-    raceFail: "No se pudo completar la descarga. Inténtalo en unos segundos.",
-    notFound: "Archivo no encontrado o expirado.",
+    stageProxy: "Creando un enlace de proxy temporal…",
+    videoError: "No se pudo preparar el proxy de video.",
+    audioError: "No se pudo preparar el proxy de audio.",
+    raceFail: "No se pudo preparar un enlace de proxy. Inténtalo en unos segundos.",
+    proxyExpired: "El enlace de proxy no existe o expiró.",
+    proxyUnavailable: "No se pudo conectar con el origen del archivo.",
   },
   en: {
     rateLimited: "Too many requests. Please wait a moment.",
-    busy: "Too many downloads in progress. Try again in a few seconds.",
+    busy: "Too many conversions are in progress. Try again in a few seconds.",
+    proxyBusy: "Too many proxy streams are in progress. Please try again.",
     invalidUrl: "The YouTube link is not valid.",
     invalidVideoQuality: "Invalid video quality (360, 480, 720 or 1080).",
     invalidAudioQuality: "Invalid audio quality.",
-    stageSearch: "Searching on several servers…",
+    stageSearch: "Finding a media source…",
     stageDetails: "Getting video details…",
-    stageDownloadVideo: "Downloading the MP4 file…",
-    stageDownloadAudio: "Downloading the MP3 file…",
-    videoError: "Error downloading the video.",
-    audioError: "Error downloading the audio.",
-    raceFail: "Could not complete the download. Try again in a few seconds.",
-    notFound: "File not found or expired.",
+    stageProxy: "Creating a temporary proxy link…",
+    videoError: "Could not prepare the video proxy.",
+    audioError: "Could not prepare the audio proxy.",
+    raceFail: "Could not prepare a proxy link. Try again in a few seconds.",
+    proxyExpired: "This proxy link does not exist or has expired.",
+    proxyUnavailable: "Could not reach the file source.",
   },
 } as const;
 
-function t(lang: string, key: keyof typeof T.es): string {
-  const dict = lang === "en" ? T.en : T.es;
-  return dict[key];
+type TranslationKey = keyof typeof T.es;
+
+function t(lang: string, key: TranslationKey): string {
+  return (lang === "en" ? T.en : T.es)[key];
 }
 
-// acepta "en", "en-US", "es-ES", etc.
 function pickLang(value: unknown): string {
   return String(value || "").toLowerCase().startsWith("en") ? "en" : "es";
 }
 
 function rateLimited(ip: string): boolean {
   const now = Date.now();
-  const recent = (hits.get(ip) || []).filter((t) => now - t < PER_IP_WINDOW);
+  const recent = (hits.get(ip) || []).filter((time) => now - time < PER_IP_WINDOW);
   if (recent.length >= PER_IP_LIMIT) {
     hits.set(ip, recent);
     return true;
@@ -96,20 +95,17 @@ function rateLimited(ip: string): boolean {
   return false;
 }
 
-function beginDownload(ip: string, lang: string): string | null {
+function beginPreparation(ip: string, lang: string): string | null {
   if (rateLimited(ip)) return t(lang, "rateLimited");
-  if (activeDownloads >= CONCURRENT_MAX) {
-    return t(lang, "busy");
-  }
-  activeDownloads++;
+  if (activePreparations >= PREPARE_CONCURRENT_MAX) return t(lang, "busy");
+  activePreparations += 1;
   return null;
 }
 
-function endDownload(): void {
-  activeDownloads = Math.max(0, activeDownloads - 1);
+function endPreparation(): void {
+  activePreparations = Math.max(0, activePreparations - 1);
 }
 
-// el cliente lee el progreso real por un stream de eventos
 type EmitFn = (event: Record<string, unknown>) => void;
 
 function sseStart(req: express.Request, res: express.Response): boolean {
@@ -127,23 +123,9 @@ function sseWrite(res: express.Response, event: Record<string, unknown>): void {
   res.write(`data: ${JSON.stringify(event)}\n\n`);
 }
 
-function makeProgress(emit: EmitFn) {
-  let lastPct = -1;
-  let lastTime = 0;
-  return (written: number, total: number) => {
-    const pct = total > 0 ? Math.floor((written / total) * 100) : -1;
-    const now = Date.now();
-    if (pct === lastPct || now - lastTime < 200) return;
-    lastPct = pct;
-    lastTime = now;
-    emit({ type: "progress", stage: "download", percent: pct });
-  };
-}
-
 interface VideoInfo {
   url: string;
   referer: string;
-  /** Cabeceras necesarias para recuperar URLs firmadas de algunos proveedores. */
   headers?: Record<string, string>;
   calidad: string;
   titulo: string | null;
@@ -151,17 +133,15 @@ interface VideoInfo {
 }
 
 interface AudioInfo {
-  url?: string;
+  url: string;
   archivo: string;
   referer: string;
-  /** Cabeceras necesarias para recuperar URLs firmadas de algunos proveedores. */
   headers?: Record<string, string>;
   calidad?: string;
-  stream?: NodeJS.ReadableStream;
 }
 
-// corre todos los scraper a la vez; el primero en responder gana y
-// el resto se aborta para no gastar recursos
+// Los proveedores se consultan en paralelo; el primer enlace de media válido
+// gana. No se descarga ni guarda el archivo en esta fase.
 async function raceScrapers<T>(
   builders: Array<(signal: AbortSignal) => Promise<T>>,
   lang: string
@@ -172,7 +152,6 @@ async function raceScrapers<T>(
       build(controllers[index].signal).then((value) => ({ value, index }))
     );
     const winner = await Promise.any(tagged);
-    // abortamos solo a los perdedores; el ganador conserva su señal
     controllers.forEach((controller, index) => {
       if (index !== winner.index) controller.abort();
     });
@@ -191,10 +170,8 @@ async function fetchVideo(
 ): Promise<VideoInfo> {
   const videoId = extractVideoId(fullUrl) || "";
   emit({ type: "stage", label: t(lang, "stageSearch") });
-  return await raceScrapers<VideoInfo>(
+  return raceScrapers<VideoInfo>(
     [
-      // Y2Mate/cnv.cx y cnvmp3 devuelven enlaces firmados que se validan
-      // antes de entrar a la carrera; así no bloquean una descarga con un 200 HTML.
       (signal) => y2mateVideo(videoId, quality, signal),
       (signal) => cnvmp3Video(videoId, quality, signal),
       (signal) => savetubeVideo(fullUrl, quality, signal),
@@ -204,18 +181,26 @@ async function fetchVideo(
   );
 }
 
+function makeAbsoluteProxyUrl(req: express.Request, id: string): string {
+  return `${req.protocol}://${req.get("host")}/p/${id}`;
+}
+
 app.get("/health", (_req, res) => {
-  res.json({ ok: true, servicio: "ypi", tiempo: Math.round(process.uptime()) });
+  res.json({
+    ok: true,
+    servicio: "ypi",
+    modo: "proxy-stream",
+    tiempo: Math.round(process.uptime()),
+  });
 });
 
-// cuántos archivos se han descargado (persistido en SQLite)
 app.get("/api/stats", (_req, res) => {
   res.json({ ok: true, data: getStats() });
 });
 
 app.post("/api/video", async (req, res) => {
   const lang = pickLang(req.body?.lang);
-  const limitError = beginDownload(req.ip || "unknown", lang);
+  const limitError = beginPreparation(req.ip || "unknown", lang);
   const videoId = extractVideoId(String(req.body?.url || ""));
   const quality = Number(req.body?.quality || 360);
 
@@ -224,12 +209,12 @@ app.post("/api/video", async (req, res) => {
     return;
   }
   if (!videoId) {
-    endDownload();
+    endPreparation();
     res.status(400).json({ ok: false, error: t(lang, "invalidUrl") });
     return;
   }
   if (![360, 480, 720, 1080].includes(quality)) {
-    endDownload();
+    endPreparation();
     res.status(400).json({ ok: false, error: t(lang, "invalidVideoQuality") });
     return;
   }
@@ -241,56 +226,38 @@ app.post("/api/video", async (req, res) => {
 
   try {
     emit({ type: "stage", label: t(lang, "stageDetails") });
-    const info = await fetchVideo(
-      `https://www.youtube.com/watch?v=${videoId}`,
-      quality,
-      emit,
-      lang
-    );
-    const details = await fetchVideoDetails(videoId);
-
-    const name = sanitizeFilename(
+    const [info, details] = await Promise.all([
+      fetchVideo(`https://www.youtube.com/watch?v=${videoId}`, quality, emit, lang),
+      fetchVideoDetails(videoId),
+    ]);
+    const filename = `${sanitizeFilename(
       (info.titulo || details.titulo || "video").replace(/\.mp4$/i, "")
-    );
+    )}.mp4`;
 
-    emit({ type: "stage", label: t(lang, "stageDownloadVideo") });
-    emit({ type: "progress", stage: "download", percent: 0 });
-    const stored = await saveVideoBuffer(
-      info.url,
-      {
-        filename: `${name}.mp4`,
-        mime: "video/mp4",
-        ext: "mp4",
-        headers: {
-          Referer: info.referer,
-          "User-Agent": DESKTOP_UA,
-          ...(info.headers || {}),
-        },
-      },
-      makeProgress(emit)
-    );
-    emit({ type: "progress", stage: "download", percent: 100 });
-
-    recordDownload({
-      tipo: "video",
-      calidad: info.calidad,
-      titulo: info.titulo || details.titulo,
+    emit({ type: "stage", label: t(lang, "stageProxy") });
+    const ticket = createProxyTicket({
+      url: info.url,
+      referer: info.referer,
+      headers: info.headers,
+      filename,
+      mime: "video/mp4",
+      kind: "video",
+      quality: info.calidad,
+      title: info.titulo || details.titulo,
       videoId,
-      tamano: stored.size,
     });
 
-    const base = `${req.protocol}://${req.get("host")}`;
     const data = {
-      id: stored.id,
-      downloadUrl: `${base}/d/${stored.id}.${stored.ext}`,
-      filename: stored.filename,
-      size: stored.size,
+      downloadUrl: makeAbsoluteProxyUrl(req, ticket.id),
+      filename: ticket.filename,
+      size: 0,
       calidad: info.calidad,
       titulo: info.titulo || details.titulo,
       canal: details.canal,
       duracion: info.duracion,
       miniatura: details.miniatura,
-      expiraEn: getTTLSeconds(),
+      expiraEn: getProxyTTLSeconds(),
+      proxied: true,
     };
     if (sse) {
       emit({ type: "done", data });
@@ -307,13 +274,13 @@ app.post("/api/video", async (req, res) => {
       res.status(500).json({ ok: false, error: message });
     }
   } finally {
-    endDownload();
+    endPreparation();
   }
 });
 
 app.post("/api/audio", async (req, res) => {
   const lang = pickLang(req.body?.lang);
-  const limitError = beginDownload(req.ip || "unknown", lang);
+  const limitError = beginPreparation(req.ip || "unknown", lang);
   const videoId = extractVideoId(String(req.body?.url || ""));
   const quality = Number(req.body?.quality || 128);
 
@@ -322,12 +289,12 @@ app.post("/api/audio", async (req, res) => {
     return;
   }
   if (!videoId) {
-    endDownload();
+    endPreparation();
     res.status(400).json({ ok: false, error: t(lang, "invalidUrl") });
     return;
   }
   if (![96, 128, 256, 320].includes(quality)) {
-    endDownload();
+    endPreparation();
     res.status(400).json({ ok: false, error: t(lang, "invalidAudioQuality") });
     return;
   }
@@ -346,67 +313,39 @@ app.post("/api/audio", async (req, res) => {
           (signal) => cnvmp3Audio(videoId, quality as AudioQuality, signal),
           (signal) =>
             savetubeAudio(`https://www.youtube.com/watch?v=${videoId}`, signal),
-          (signal) =>
-            yt2songAudio(
-              `https://www.youtube.com/watch?v=${videoId}`,
-              quality,
-              signal
-            ),
         ],
         lang
       ),
       fetchVideoDetails(videoId),
     ]);
-    const filename = sanitizeFilename(
-      (info.archivo || details.titulo || "audio").replace(/\.mp3$/, "")
-    );
+    const filename = `${sanitizeFilename(
+      (info.archivo || details.titulo || "audio").replace(/\.mp3$/i, "")
+    )}.mp3`;
 
-    emit({ type: "stage", label: t(lang, "stageDownloadAudio") });
-    emit({ type: "progress", stage: "download", percent: 0 });
-    const stream = info.stream
-      ? info.stream
-      : (
-          await axios.get(info.url as string, {
-            responseType: "stream",
-            timeout: 180000,
-            headers: {
-              Referer: info.referer,
-              "User-Agent": DESKTOP_UA,
-              ...(info.headers || {}),
-            },
-          })
-        ).data;
-    const stored = await saveAudioBuffer(
-      stream,
-      {
-        filename: `${filename}.mp3`,
-        mime: "audio/mpeg",
-        ext: "mp3",
-      },
-      makeProgress(emit)
-    );
-    emit({ type: "progress", stage: "download", percent: 100 });
-
-    recordDownload({
-      tipo: "audio",
-      calidad: info.calidad || `${quality} kbps`,
-      titulo: details.titulo,
+    emit({ type: "stage", label: t(lang, "stageProxy") });
+    const ticket = createProxyTicket({
+      url: info.url,
+      referer: info.referer,
+      headers: info.headers,
+      filename,
+      mime: "audio/mpeg",
+      kind: "audio",
+      quality: info.calidad || `${quality} kbps`,
+      title: details.titulo,
       videoId,
-      tamano: stored.size,
     });
 
-    const base = `${req.protocol}://${req.get("host")}`;
     const data = {
-      id: stored.id,
-      downloadUrl: `${base}/d/${stored.id}.${stored.ext}`,
-      filename: stored.filename,
-      size: stored.size,
+      downloadUrl: makeAbsoluteProxyUrl(req, ticket.id),
+      filename: ticket.filename,
+      size: 0,
       calidad: info.calidad || `${quality} kbps`,
       titulo: details.titulo,
       canal: details.canal,
       duracion: 0,
       miniatura: details.miniatura,
-      expiraEn: getTTLSeconds(),
+      expiraEn: getProxyTTLSeconds(),
+      proxied: true,
     };
     if (sse) {
       emit({ type: "done", data });
@@ -423,47 +362,53 @@ app.post("/api/audio", async (req, res) => {
       res.status(500).json({ ok: false, error: message });
     }
   } finally {
-    endDownload();
+    endPreparation();
   }
 });
 
-app.get("/d/:file", async (req, res) => {
-  const match = String(req.params.file || "").match(
-    /^([A-Za-z0-9]{6,10})(?:\.(mp4|mp3))?$/i
-  );
+app.get("/p/:id", async (req, res) => {
   const lang = pickLang(req.headers["accept-language"]);
-  if (!match) {
-    res.status(404).type("text/plain").send(t(lang, "notFound"));
+  const ticket = findProxyTicket(String(req.params.id || ""));
+  if (!ticket) {
+    res.status(404).type("text/plain").send(t(lang, "proxyExpired"));
     return;
   }
-  const record = await resolveFile(match[1]);
-  if (!record) {
-    res.status(404).type("text/plain").send(t(lang, "notFound"));
+  if (activeProxyStreams >= PROXY_CONCURRENT_MAX) {
+    res.status(503).type("text/plain").send(t(lang, "proxyBusy"));
     return;
   }
-  res.setHeader("Content-Type", record.mime);
-  res.setHeader("Content-Length", String(record.size));
-  res.setHeader(
-    "Content-Disposition",
-    `attachment; filename*=UTF-8''${encodeURIComponent(record.filename)}`
-  );
-  res.setHeader("Cache-Control", "private, max-age=60");
-  createFileStream(record).pipe(res);
+
+  activeProxyStreams += 1;
+  try {
+    const bytes = await streamProxyTicket(ticket, req, res);
+    if (bytes > 0) {
+      recordDownload({
+        tipo: ticket.kind === "video" ? "video" : "audio",
+        calidad: ticket.quality,
+        titulo: ticket.title,
+        videoId: ticket.videoId,
+        tamano: bytes,
+      });
+    }
+  } catch (error: any) {
+    if (!res.headersSent) {
+      const status = error?.message === "PROXY_BUSY" ? 409 : 502;
+      res.status(status).type("text/plain").send(
+        error?.message === "PROXY_BUSY" ? t(lang, "proxyBusy") : t(lang, "proxyUnavailable")
+      );
+    } else if (!res.writableEnded) {
+      res.destroy();
+    }
+  } finally {
+    activeProxyStreams = Math.max(0, activeProxyStreams - 1);
+  }
 });
 
 app.use(express.static(path.join(process.cwd(), "public")));
 
 const PORT = Number(process.env.PORT) || 3000;
-
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`YPi listo en http://0.0.0.0:${PORT}`);
+  console.log(`YPi proxy listo en http://0.0.0.0:${PORT}`);
 });
 
-cleanupOldFiles().then((removed) => {
-  if (removed > 0)
-    console.log(`Limpieza: ${removed} archivos expirados eliminados.`);
-});
-// con TTL de 3 minutos, limpiamos cada minuto
-setInterval(() => {
-  cleanupOldFiles().catch(() => undefined);
-}, 60 * 1000);
+setInterval(() => cleanupProxyTickets(), 30_000);

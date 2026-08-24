@@ -4,216 +4,173 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#000000" />
-  <meta name="description" content="YPi convierte enlaces de YouTube a MP4 o MP3 con una interfaz rápida, clara y bilingüe." />
-  <title>YPi · Conversor de YouTube</title>
+  <meta name="description" content="YPi crea enlaces temporales de proxy para media de YouTube. No guarda archivos." />
+  <title>YPi · Media proxy</title>
   <link rel="icon" type="image/svg+xml" href="logo.svg" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="site-shell">
-    <header class="site-header">
-      <a class="brand-mark" href="/" aria-label="YPi — inicio" data-i18n-aria="brandHome">
-        <img src="logo.svg" width="32" height="32" alt="" />
-        <span>ypi</span>
+  <div id="tabs-container">
+    <nav class="tabs" aria-label="Navegación principal" data-i18n-aria="mainNav">
+      <a class="tab tab-active" href="#download">
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 19V5m0 14h16" /><path d="m7 15 4-4 3 2 5-6" /></svg>
+        <span data-i18n="navConvert">Proxy</span>
       </a>
+      <a class="tab" href="#guide">
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 4.5h11a3 3 0 0 1 3 3V20H8a3 3 0 0 0-3 3V4.5Zm0 0h-.5A2.5 2.5 0 0 0 2 7v12a2 2 0 0 1 2-2h15" /><path d="M9 9h6m-6 4h6" /></svg>
+        <span data-i18n="navGuide">Guía</span>
+      </a>
+      <a class="tab tab-github" href="https://github.com/nauut2/ypi" target="_blank" rel="noopener">
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M15 22v-3.87c.04-.5-.13-.99-.48-1.35 3.94-.44 8.08-1.93 8.08-8.75A6.84 6.84 0 0 0 20.8 3.3 6.36 6.36 0 0 0 20.63.2S19.2-.25 16 1.85a15.5 15.5 0 0 0-8 0C4.8-.25 3.37.2 3.37.2A6.36 6.36 0 0 0 3.2 3.3a6.84 6.84 0 0 0-1.8 4.73c0 6.8 4.13 8.3 8.07 8.75A1.94 1.94 0 0 0 9 18.13V22" /><path d="M9 19c-3 .92-5 0-5-4" /></svg>
+        <span class="tab-name">GitHub</span>
+      </a>
+      <div class="tab language-tab" role="group" aria-label="Idioma / Language" data-i18n-aria="language">
+        <button class="lang-btn is-active" id="langEs" type="button" aria-pressed="true">ES</button>
+        <button class="lang-btn" id="langEn" type="button" aria-pressed="false">EN</button>
+      </div>
+    </nav>
+  </div>
 
-      <nav class="tabs" aria-label="Navegación principal" data-i18n-aria="mainNav">
-        <a class="tab is-active" href="#download">
-          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 17v3h14v-3" /></svg>
-          <span data-i18n="navConvert">Convertir</span>
-        </a>
-        <a class="tab" href="#guide">
-          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 4.5h11a3 3 0 0 1 3 3V20H8a3 3 0 0 0-3 3V4.5Zm0 0h-.5A2.5 2.5 0 0 0 2 7v12a2 2 0 0 1 2-2h15" /><path d="M9 9h6m-6 4h6" /></svg>
-          <span data-i18n="navGuide">Guía</span>
-        </a>
-        <a class="tab tab-github" href="https://github.com/nauut2/ypi" target="_blank" rel="noopener">
-          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M15 22v-3.87c.04-.5-.13-.99-.48-1.35 3.94-.44 8.08-1.93 8.08-8.75A6.84 6.84 0 0 0 20.8 3.3 6.36 6.36 0 0 0 20.63.2S19.2-.25 16 1.85a15.5 15.5 0 0 0-8 0C4.8-.25 3.37.2 3.37.2A6.36 6.36 0 0 0 3.2 3.3a6.84 6.84 0 0 0-1.8 4.73c0 6.8 4.13 8.3 8.07 8.75A1.94 1.94 0 0 0 9 18.13V22" /><path d="M9 19c-3 .92-5 0-5-4" /></svg>
-          <span class="wide-only">GitHub</span>
-        </a>
-      </nav>
-
-      <div class="header-tools">
-        <span class="status" title="Servicio disponible" data-i18n-title="onlineTitle">
-          <i aria-hidden="true"></i><span data-i18n="online">En línea</span>
-        </span>
-        <div class="language-switch" role="group" aria-label="Idioma / Language" data-i18n-aria="language">
-          <button class="lang-btn is-active" id="langEs" type="button" aria-pressed="true">ES</button>
-          <button class="lang-btn" id="langEn" type="button" aria-pressed="false">EN</button>
+  <main id="page-content">
+    <section aria-labelledby="profileName">
+      <div class="header-block-banner" aria-hidden="true">
+        <span class="banner-line line-a"></span>
+        <span class="banner-line line-b"></span>
+        <span class="banner-orbit orbit-a"></span>
+        <span class="banner-orbit orbit-b"></span>
+        <span class="banner-code">/ proxy / stream / 04</span>
+      </div>
+      <div class="header-block-text">
+        <div id="avatar"><img src="logo.svg" width="100" height="100" alt="" /></div>
+        <div class="name-row">
+          <span id="profileName">ypi</span>
+          <svg class="verified" aria-hidden="true" viewBox="0 0 24 24"><path d="m12 2 2 2.2 3-.3.7 2.9 2.7 1.4-1 2.8 1 2.8-2.7 1.4-.7 2.9-3-.3L12 22l-2-2.2-3 .3-.7-2.9-2.7-1.4 1-2.8-1-2.8 2.7-1.4L7 3.9l3 .3L12 2Z" /><path d="m8.7 12 2.1 2.1 4.6-4.6" /></svg>
+        </div>
+        <span id="profession" data-i18n="profileRole">media proxy / stream only</span>
+        <p id="description" data-i18n="profileDescription">Convierte el enlace en un stream temporal. El archivo no se guarda en este servidor.</p>
+        <div id="skills" aria-label="Funciones de YPi" data-i18n-aria="features">
+          <span class="skill-tag">MP4</span>
+          <span class="skill-tag">MP3</span>
+          <span class="skill-tag" data-i18n="streamTag">STREAM</span>
+          <span class="skill-tag">ES / EN</span>
         </div>
       </div>
-    </header>
+    </section>
 
-    <main id="main-content">
-      <section class="intro-card" aria-labelledby="heroTitle">
-        <div class="intro-banner" aria-hidden="true">
-          <span class="grid-corner grid-corner-a"></span>
-          <span class="grid-corner grid-corner-b"></span>
-          <span class="signal signal-one"></span>
-          <span class="signal signal-two"></span>
-          <span class="banner-code">/ media / convert / 01</span>
-        </div>
-        <div class="intro-content">
-          <img class="intro-logo" src="logo.svg" width="80" height="80" alt="" />
-          <p class="eyebrow"><span aria-hidden="true">◆</span> <span data-i18n="eyebrow">CONVERSOR DE MEDIOS</span></p>
-          <h1 id="heroTitle"><span data-i18n="heroTitle">Tu enlace.</span> <em data-i18n="heroAccent">Tu archivo.</em></h1>
-          <p class="hero-copy" data-i18n="heroCopy">Convierte videos públicos de YouTube a MP4 o MP3 en unos pasos, sin crear una cuenta.</p>
-          <p class="legal-inline">
-            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 22s8-3.8 8-10V5l-8-3-8 3v7c0 6.2 8 10 8 10Z" /><path d="m9 12 2 2 4-4" /></svg>
-            <span data-i18n="legalInline">Usa solo contenido que tengas derecho a descargar.</span>
-          </p>
-        </div>
-      </section>
-
-      <section class="section-card" id="download" aria-labelledby="downloadHeading">
-        <div class="section-heading">
-          <div class="heading-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 17v3h14v-3" /></svg>
-          </div>
-          <div>
-            <p class="section-kicker">01 / YPI</p>
-            <h2 id="downloadHeading" data-i18n="downloadTitle">Convertir enlace</h2>
-          </div>
-          <span class="heading-note" data-i18n="noAccount">sin cuenta</span>
+    <section id="download" aria-labelledby="downloadHeading">
+      <div class="block-head">
+        <span class="block-title" id="downloadHeading" data-i18n="downloadTitle">Crear proxy</span>
+        <span class="block-state"><i aria-hidden="true"></i><span data-i18n="streamOnly">sin almacenamiento</span></span>
+      </div>
+      <div class="block-sub converter-block">
+        <label class="field-label" for="url" data-i18n="urlLabel">ENLACE DE YOUTUBE</label>
+        <div class="url-field">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.1.1l2.1-2.1a5 5 0 0 0-7.1-7.1l-1.2 1.2" /><path d="M14 11a5 5 0 0 0-7.1-.1l-2.1 2.1a5 5 0 0 0 7.1 7.1l1.2-1.2" /></svg>
+          <input id="url" type="url" inputmode="url" placeholder="https://youtube.com/watch?v=…" data-i18n-placeholder="urlPlaceholder" spellcheck="false" autocomplete="off" aria-label="Enlace de YouTube" data-i18n-aria="urlLabel" />
+          <button class="paste-btn" id="paste" type="button" title="Pegar desde el portapapeles" data-i18n-title="pasteTitle">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2" /><path d="M15 3h4a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-8a2 2 0 0 1-2-2v-4" /><path d="M9 9h6M9 13h5" /></svg>
+            <span data-i18n="paste">Pegar</span>
+          </button>
         </div>
 
-        <div class="section-body converter-body">
-          <label class="field-label" for="url" data-i18n="urlLabel">ENLACE DE YOUTUBE</label>
-          <div class="url-field">
-            <svg class="field-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.1.1l2.1-2.1a5 5 0 0 0-7.1-7.1l-1.2 1.2" /><path d="M14 11a5 5 0 0 0-7.1-.1l-2.1 2.1a5 5 0 0 0 7.1 7.1l1.2-1.2" /></svg>
-            <input
-              id="url"
-              type="url"
-              inputmode="url"
-              placeholder="https://youtube.com/watch?v=…"
-              data-i18n-placeholder="urlPlaceholder"
-              spellcheck="false"
-              autocomplete="off"
-              aria-label="Enlace de YouTube"
-              data-i18n-aria="urlLabel"
-            />
-            <button class="paste-btn" id="paste" type="button" title="Pegar desde el portapapeles" data-i18n-title="pasteTitle">
-              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2" /><path d="M15 3h4a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-8a2 2 0 0 1-2-2v-4" /><path d="M9 9h6M9 13h5" /></svg>
-              <span data-i18n="paste">Pegar</span>
-            </button>
-          </div>
-
-          <div class="settings-grid">
-            <div class="setting-block">
-              <p class="field-label" data-i18n="formatLabel">FORMATO</p>
-              <div class="format-toggle" role="tablist" aria-label="Formato" data-i18n-aria="formatLabel">
-                <button class="format-btn is-active" role="tab" aria-selected="true" data-mode="video" type="button">
-                  <svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m10 9 5 3-5 3V9Z" /></svg>
-                  <span data-i18n="video">Video</span><b>MP4</b>
-                </button>
-                <button class="format-btn" role="tab" aria-selected="false" data-mode="audio" type="button">
-                  <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9 18V5l10-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="16" cy="16" r="3" /></svg>
-                  <span data-i18n="audio">Audio</span><b>MP3</b>
-                </button>
-              </div>
-            </div>
-
-            <div class="setting-block quality-block">
-              <p class="field-label" data-i18n="qualityLabel">CALIDAD</p>
-              <div class="quality-pills" id="qualityPills" role="group" aria-label="Calidad" data-i18n-aria="qualityLabel"></div>
-            </div>
-          </div>
-
-          <div class="action-row">
-            <p class="compatibility"><span aria-hidden="true">↳</span> <span data-i18n="compatibility">Videos, Shorts y enlaces youtu.be</span></p>
-            <button id="go" class="download-btn" type="button">
-              <span data-i18n="downloadBtn">Crear descarga</span>
-              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12h13m-5-5 5 5-5 5" /></svg>
-            </button>
-          </div>
-
-          <div class="progress" id="progress" hidden role="status" aria-live="polite">
-            <div class="progress-topline">
-              <span class="spinner" aria-hidden="true"></span>
-              <span class="progress-label" id="progressText" data-i18n="processing">Preparando conversión…</span>
-              <strong class="progress-pct" id="progressPct">0%</strong>
-            </div>
-            <div class="progress-track" aria-hidden="true"><span class="progress-fill" id="progressFill"></span></div>
-          </div>
-        </div>
-      </section>
-
-      <section class="result-section" id="result" hidden aria-labelledby="resultTitle">
-        <div class="section-heading result-heading">
-          <div class="heading-icon success-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6" /></svg>
-          </div>
-          <div>
-            <p class="section-kicker">02 / READY</p>
-            <h2 id="resultTitle" data-i18n="ready">Tu archivo está listo</h2>
-          </div>
-        </div>
-        <div class="result-body">
-          <div class="thumbnail-frame">
-            <img id="rThumb" alt="Miniatura del video" data-i18n-alt="thumbnailAlt" />
-            <span class="thumbnail-fallback" aria-hidden="true">YPi</span>
-          </div>
-          <div class="result-info">
-            <h3 id="rTitle"></h3>
-            <p class="result-meta" id="rMeta"></p>
-            <div class="chips" id="rChips"></div>
-            <label class="field-label compact" for="rLink" data-i18n="directLink">ENLACE DIRECTO</label>
-            <div class="result-link-row">
-              <input id="rLink" readonly spellcheck="false" aria-label="Enlace directo" data-i18n-aria="directLink" />
-              <button id="rCopy" class="copy-btn" type="button">
-                <svg aria-hidden="true" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
-                <span data-i18n="copy">Copiar</span>
+        <div class="settings-row">
+          <div class="setting-block">
+            <p class="field-label" data-i18n="formatLabel">FORMATO</p>
+            <div class="format-toggle" role="tablist" aria-label="Formato" data-i18n-aria="formatLabel">
+              <button class="format-btn is-active" role="tab" aria-selected="true" data-mode="video" type="button">
+                <svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m10 9 5 3-5 3V9Z" /></svg>
+                <span data-i18n="video">Video</span><b>MP4</b>
+              </button>
+              <button class="format-btn" role="tab" aria-selected="false" data-mode="audio" type="button">
+                <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9 18V5l10-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="16" cy="16" r="3" /></svg>
+                <span data-i18n="audio">Audio</span><b>MP3</b>
               </button>
             </div>
-            <a id="rDownload" class="file-btn" href="#" download>
-              <span data-i18n="downloadFile">Descargar archivo</span>
-              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 17v3h14v-3" /></svg>
-            </a>
-            <p class="expiry" id="rHint"></p>
+          </div>
+          <div class="setting-block quality-block">
+            <p class="field-label" data-i18n="qualityLabel">CALIDAD</p>
+            <div class="quality-pills" id="qualityPills" role="group" aria-label="Calidad" data-i18n-aria="qualityLabel"></div>
           </div>
         </div>
-      </section>
 
-      <section class="stats-section" id="stats" hidden aria-labelledby="statsTitle">
-        <div class="section-heading small-heading">
-          <div class="heading-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M4 19V5m0 14h16" /><path d="m7 15 4-4 3 2 5-6" /></svg>
-          </div>
-          <div>
-            <p class="section-kicker">03 / LIVE</p>
-            <h2 id="statsTitle" data-i18n="statsTitle">Actividad</h2>
-          </div>
+        <div class="action-row">
+          <p class="proxy-note"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 22s8-3.8 8-10V5l-8-3-8 3v7c0 6.2 8 10 8 10Z" /><path d="m9 12 2 2 4-4" /></svg><span data-i18n="proxyNotice">El archivo se transmite al navegador; no se almacena.</span></p>
+          <button id="go" class="proxy-btn" type="button">
+            <span data-i18n="downloadBtn">Crear enlace</span>
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12h13m-5-5 5 5-5 5" /></svg>
+          </button>
         </div>
-        <div class="stats-grid">
-          <div class="stat-total"><span data-i18n="statTotal">DESCARGAS TOTALES</span><strong id="statTotal">0</strong></div>
-          <div class="stat-cell"><strong id="statVideos">0</strong><span data-i18n="statVideos">Videos MP4</span></div>
-          <div class="stat-cell"><strong id="statAudios">0</strong><span data-i18n="statAudios">Audios MP3</span></div>
-          <div class="stat-cell"><strong id="statToday">0</strong><span data-i18n="statToday">Hoy</span></div>
-        </div>
-      </section>
 
-      <section class="guide-section" id="guide" aria-labelledby="guideTitle">
-        <div class="section-heading small-heading">
-          <div class="heading-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M5 4.5h11a3 3 0 0 1 3 3V20H8a3 3 0 0 0-3 3V4.5Zm0 0h-.5A2.5 2.5 0 0 0 2 7v12a2 2 0 0 1 2-2h15" /><path d="M9 9h6m-6 4h6" /></svg>
+        <div class="progress" id="progress" hidden role="status" aria-live="polite">
+          <div class="progress-topline">
+            <span class="spinner" aria-hidden="true"></span>
+            <span class="progress-label" id="progressText" data-i18n="processing">Preparando proxy…</span>
+            <strong class="progress-pct" id="progressPct">· · ·</strong>
           </div>
-          <div>
-            <p class="section-kicker">04 / GUIDE</p>
-            <h2 id="guideTitle" data-i18n="guideTitle">Así de simple</h2>
-          </div>
+          <div class="progress-track" aria-hidden="true"><span class="progress-fill" id="progressFill"></span></div>
         </div>
-        <ol class="guide-list">
-          <li><span>01</span><div><h3 data-i18n="step1Title">Pega una URL</h3><p data-i18n="step1Text">Aceptamos enlaces de videos, Shorts y youtu.be.</p></div></li>
-          <li><span>02</span><div><h3 data-i18n="step2Title">Elige formato y calidad</h3><p data-i18n="step2Text">Selecciona MP4 para video o MP3 para audio.</p></div></li>
-          <li><span>03</span><div><h3 data-i18n="step3Title">Guarda el archivo</h3><p data-i18n="step3Text">Recibe una descarga directa temporal al terminar.</p></div></li>
-        </ol>
-      </section>
-    </main>
+      </div>
+    </section>
 
-    <footer class="site-footer">
-      <p><strong>ypi</strong> <span aria-hidden="true">/</span> <span data-i18n="footer">conversor de medios personal</span></p>
-      <p class="footer-note" data-i18n="footerNote">No afiliado con YouTube o Google. Respeta los derechos y las condiciones de uso.</p>
-    </footer>
-  </div>
+    <section id="result" hidden aria-labelledby="resultTitle">
+      <div class="block-head">
+        <span class="block-title" id="resultTitle" data-i18n="ready">Proxy listo</span>
+        <span class="block-state is-ready"><i aria-hidden="true"></i><span data-i18n="readyState">stream preparado</span></span>
+      </div>
+      <div class="block-sub result-block">
+        <div class="thumbnail-frame">
+          <img id="rThumb" alt="Miniatura del video" data-i18n-alt="thumbnailAlt" />
+          <span class="thumbnail-fallback" aria-hidden="true">ypi</span>
+        </div>
+        <div class="result-info">
+          <h2 id="rTitle"></h2>
+          <p class="result-meta" id="rMeta"></p>
+          <div class="chips" id="rChips"></div>
+          <label class="field-label compact" for="rLink" data-i18n="directLink">ENLACE DE PROXY</label>
+          <div class="result-link-row">
+            <input id="rLink" readonly spellcheck="false" aria-label="Enlace de proxy" data-i18n-aria="directLink" />
+            <button id="rCopy" class="copy-btn" type="button">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
+              <span data-i18n="copy">Copiar</span>
+            </button>
+          </div>
+          <a id="rDownload" class="file-btn" href="#" download>
+            <span data-i18n="downloadFile">Abrir descarga</span>
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 17v3h14v-3" /></svg>
+          </a>
+          <p class="expiry" id="rHint"></p>
+        </div>
+      </div>
+    </section>
+
+    <section id="stats" hidden aria-labelledby="statsTitle">
+      <div class="block-head">
+        <span class="block-title" id="statsTitle" data-i18n="statsTitle">Actividad</span>
+      </div>
+      <div class="block-sub stats-grid">
+        <div class="stat-total"><span data-i18n="statTotal">PROXIES TOTALES</span><strong id="statTotal">0</strong></div>
+        <div class="stat-cell"><strong id="statVideos">0</strong><span data-i18n="statVideos">Video MP4</span></div>
+        <div class="stat-cell"><strong id="statAudios">0</strong><span data-i18n="statAudios">Audio MP3</span></div>
+        <div class="stat-cell"><strong id="statToday">0</strong><span data-i18n="statToday">Hoy</span></div>
+      </div>
+    </section>
+
+    <section id="guide" aria-labelledby="guideTitle">
+      <div class="block-head">
+        <span class="block-title" id="guideTitle" data-i18n="guideTitle">Cómo funciona</span>
+      </div>
+      <ol class="block-sub guide-list">
+        <li><span>01</span><div><h3 data-i18n="step1Title">Pega una URL</h3><p data-i18n="step1Text">Aceptamos videos, Shorts y enlaces youtu.be.</p></div></li>
+        <li><span>02</span><div><h3 data-i18n="step2Title">Elige formato</h3><p data-i18n="step2Text">Selecciona MP4 o MP3 y la calidad disponible.</p></div></li>
+        <li><span>03</span><div><h3 data-i18n="step3Title">Abre el proxy</h3><p data-i18n="step3Text">El origen se transmite al navegador sin guardarse en YPi.</p></div></li>
+      </ol>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p><strong>ypi</strong> <span aria-hidden="true">/</span> <span data-i18n="footer">media proxy personal</span></p>
+    <p class="footer-note" data-i18n="footerNote">No se guardan archivos. No afiliado con YouTube o Google.</p>
+  </footer>
 
   <div class="toasts" id="toasts" aria-live="polite" aria-atomic="true"></div>
   <script src="app.js" defer></script>
